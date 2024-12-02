@@ -302,19 +302,71 @@ export function makeInputManager(): InputManager {
   };
 }
 
+/**
+ * Couples the camera and input manager, and exposes an async method `tick`
+ * that coordinates clearing the canvas, flushing the input manager,
+ * and capping the framerate.
+ */
+export interface MainLoop {
+  camera: Camera;
+  input: InputManager;
+  /**
+   * Flushes the input manager,
+   * waits for the next tick according to the given fps rate
+   * (during which time new input events are aggregated),
+   * and then clears the canvas in preparation for drawing.
+   * When this function resolves, a new tick has started,
+   * and is ready for the caller to perform game logic
+   * and draw to the canvas anew.
+   * If no fps rate is given, 60 is assumed.
+   */
+  tick(fps?: number): Promise<void>;
+  attach(parent?: HTMLElement): void;
+}
+
+/**
+ * Instantiates a main game loop, including a camera and input manager.
+ * The provided width and height will be the canvas dimensions,
+ * as well as the initial assumed dimensions of the logical world;
+ * those, but not the canvas dimensions, can be changed after the fact
+ * as needed. The main loop will neither begin automatically
+ * nor attach itself to the document automatically;
+ * you must attach it with `attach`
+ * and manually request loop iterations with `tick`.
+ */
+export function makeMainLoop(width: number, height: number): MainLoop {
+  const state = {lastTick: performance.now()};
+  return {
+    camera: makeCamera({
+      x: width/2, y: height/2,
+      width, height,
+      worldWidth: width,
+      worldHeight: height
+    }),
+    input: makeInputManager(),
+    async tick(fps = 60) {
+      this.input.flush();
+      const ms = 1000/fps;
+      while (performance.now() - state.lastTick < ms) {
+        await new Promise(requestAnimationFrame);
+      }
+      state.lastTick = performance.now();
+      this.camera.clear();
+    },
+    attach(parent = document.body) {
+      this.camera.attach(parent);
+      this.input.attach(this.camera.canvas);
+    }
+  };
+}
+
 export async function testUI(): Promise<void> {
-  const camera = makeCamera({
-    x: 320, y: 240,
-    width: 640, height: 480,
-    worldWidth: 640, worldHeight: 480
-  });
-  camera.attach();
-  const input = makeInputManager();
-  input.attach(camera.canvas);
+  const mainLoop = makeMainLoop(640, 480);
   const sprite = await makeSprite("/assets/testbg.png");
-  setInterval(() => {
-    camera.clear();
-    sprite.draw(320, 240, camera);
+  const {camera, input} = mainLoop;
+  mainLoop.attach();
+  for (;; await mainLoop.tick()) {
+    sprite.draw(320, 240, mainLoop.camera);
     if (input.keyHeld("ArrowUp")) {
       camera.y -= 1;
     }
@@ -333,6 +385,5 @@ export async function testUI(): Promise<void> {
     if (input.keyHeld("]")) {
       camera.zoom *= 1.01;
     }
-    input.flush();
-  }, 10);
+  }
 }
