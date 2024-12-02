@@ -1,5 +1,7 @@
 // UI abstractions.
 
+/// Types
+
 /**
  * Couples a canvas and its rendering context
  * with the intended world coordinates of the center of the drawing,
@@ -24,6 +26,66 @@ export interface Camera {
   clear(): void;
   attach(parent?: HTMLElement): void;
 }
+
+/**
+ * Aggregates key and mouse input events and caches their data
+ * to be checked on-demand. Intended to be attached to Camera.canvas
+ * and flushed once per frame.
+ */
+export interface InputManager {
+  keyHeld(key: string): boolean;
+  keyPressed(key: string): boolean;
+  keyReleased(key: string): boolean;
+  get leftClick(): boolean;
+  get leftClickDrag(): boolean;
+  get rightClick(): boolean;
+  get rightClickDrag(): boolean;
+  get middleClick(): boolean;
+  get middleClickDrag(): boolean;
+  get mouseX(): number;
+  get mouseY(): number;
+  handleEvent(event: Event): void;
+  flush(): void;
+  attach(target?: HTMLElement): void;
+}
+
+/**
+ * Couples the camera and input manager, and exposes an async method `tick`
+ * that coordinates clearing the canvas, flushing the input manager,
+ * and capping the framerate.
+ */
+export interface MainLoop {
+  camera: Camera;
+  input: InputManager;
+  /**
+   * Flushes the input manager,
+   * waits for the next tick according to the given fps rate
+   * (during which time new input events are aggregated),
+   * and then clears the canvas in preparation for drawing.
+   * When this function resolves, a new tick has started,
+   * and is ready for the caller to perform game logic
+   * and draw to the canvas anew.
+   * If no fps rate is given, 60 is assumed.
+   */
+  tick(fps?: number): Promise<void>;
+  attach(parent?: HTMLElement): void;
+}
+
+/**
+ * Command object to draw something.
+ */
+export interface Drawable {
+  draw(x: number, y: number, camera: Camera): void;
+}
+
+/**
+ * Drawable which draws an image.
+ */
+export interface Sprite extends Drawable {
+  image: HTMLImageElement;
+}
+
+/// Factory constructors
 
 /**
  * Creates a camera with the given properties,
@@ -99,39 +161,6 @@ export function makeCamera(options: {
 }
 
 /**
- * Command object to draw something.
- */
-export interface Drawable {
-  draw(x: number, y: number, camera: Camera): void;
-}
-
-/**
- * Drawable which draws an image.
- */
-export interface Sprite extends Drawable {
-  image: HTMLImageElement;
-}
-
-const cachedImages: Record<string, HTMLImageElement> = {};
-
-function drawSprite(what: Sprite, x: number, y: number, camera: Camera) {
-  const ctx = camera.renderer;
-  ctx.save();
-  ctx.resetTransform();
-  ctx.scale(camera.zoom, camera.zoom);
-  ctx.translate(
-    x + camera.width/2 - camera.x,
-    y + camera.height/2 - camera.y
-  );
-  ctx.drawImage(
-    what.image,
-    -what.image.width/2,
-    -what.image.height/2
-  );
-  ctx.restore();
-}
-
-/**
  * Loads an image, or fetches it if previously loaded.
  * Once the image is decoded, returns a sprite which draws the image
  * centered at given world coordinates.
@@ -150,28 +179,6 @@ export async function makeSprite(src: string): Promise<Sprite> {
     drawSprite(this, x, y, camera);
   }};
   return result;
-}
-
-/**
- * Aggregates key and mouse input events and caches their data
- * to be checked on-demand. Intended to be attached to Camera.canvas
- * and flushed once per frame.
- */
-export interface InputManager {
-  keyHeld(key: string): boolean;
-  keyPressed(key: string): boolean;
-  keyReleased(key: string): boolean;
-  get leftClick(): boolean;
-  get leftClickDrag(): boolean;
-  get rightClick(): boolean;
-  get rightClickDrag(): boolean;
-  get middleClick(): boolean;
-  get middleClickDrag(): boolean;
-  get mouseX(): number;
-  get mouseY(): number;
-  handleEvent(event: Event): void;
-  flush(): void;
-  attach(target?: HTMLElement): void;
 }
 
 /**
@@ -304,28 +311,6 @@ export function makeInputManager(): InputManager {
 }
 
 /**
- * Couples the camera and input manager, and exposes an async method `tick`
- * that coordinates clearing the canvas, flushing the input manager,
- * and capping the framerate.
- */
-export interface MainLoop {
-  camera: Camera;
-  input: InputManager;
-  /**
-   * Flushes the input manager,
-   * waits for the next tick according to the given fps rate
-   * (during which time new input events are aggregated),
-   * and then clears the canvas in preparation for drawing.
-   * When this function resolves, a new tick has started,
-   * and is ready for the caller to perform game logic
-   * and draw to the canvas anew.
-   * If no fps rate is given, 60 is assumed.
-   */
-  tick(fps?: number): Promise<void>;
-  attach(parent?: HTMLElement): void;
-}
-
-/**
  * Instantiates a main game loop, including a camera and input manager.
  * The provided width and height will be the canvas dimensions,
  * as well as the initial assumed dimensions of the logical world;
@@ -360,6 +345,29 @@ export function makeMainLoop(width: number, height: number): MainLoop {
     }
   };
 }
+
+/// Additional implementation details, unsorted
+
+const cachedImages: Record<string, HTMLImageElement> = {};
+
+function drawSprite(what: Sprite, x: number, y: number, camera: Camera) {
+  const ctx = camera.renderer;
+  ctx.save();
+  ctx.resetTransform();
+  ctx.scale(camera.zoom, camera.zoom);
+  ctx.translate(
+    x + camera.width/2 - camera.x,
+    y + camera.height/2 - camera.y
+  );
+  ctx.drawImage(
+    what.image,
+    -what.image.width/2,
+    -what.image.height/2
+  );
+  ctx.restore();
+}
+
+/// Test code
 
 export async function testUI(): Promise<void> {
   const mainLoop = makeMainLoop(640, 480);
