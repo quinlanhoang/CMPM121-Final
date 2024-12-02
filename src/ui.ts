@@ -9,7 +9,7 @@
  * to correctly draw itself.
  */
 export interface Camera {
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement;
   renderer: CanvasRenderingContext2D;
   get x(): number;
   get y(): number;
@@ -94,12 +94,12 @@ export interface Sprite extends Drawable {
  * for that, call `camera.attach()`.
  */
 export function makeCamera(options: {
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  worldWidth: number,
-  worldHeight: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  worldWidth: number;
+  worldHeight: number;
 }): Camera {
   const canvas = document.createElement("canvas");
   canvas.width = options.width;
@@ -112,41 +112,70 @@ export function makeCamera(options: {
       throw new Error("device is toaster");
     }
   })();
-  const state = {...options, zoom: 1};
+  const state = { ...options, zoom: 1 };
   function ensureStateValid() {
-    const logicalWidth = state.width/state.zoom;
-    const logicalHeight = state.height/state.zoom;
+    const logicalWidth = state.width / state.zoom;
+    const logicalHeight = state.height / state.zoom;
     if (state.worldWidth < logicalWidth) {
-      state.x = state.worldWidth/2;
-    } else if (state.x < logicalWidth/2) {
-      state.x = logicalWidth/2;
-    } else if (state.x > state.worldWidth - logicalWidth/2) {
-      state.x = state.worldWidth - logicalWidth/2;
+      state.x = state.worldWidth / 2;
+    } else if (state.x < logicalWidth / 2) {
+      state.x = logicalWidth / 2;
+    } else if (state.x > state.worldWidth - logicalWidth / 2) {
+      state.x = state.worldWidth - logicalWidth / 2;
     }
     if (state.worldHeight < logicalHeight) {
-      state.y = state.worldHeight/2;
-    } else if (state.y < logicalHeight/2) {
-      state.y = logicalHeight/2;
-    } else if (state.y > state.worldHeight - logicalHeight/2) {
-      state.y = state.worldHeight - logicalHeight/2;
+      state.y = state.worldHeight / 2;
+    } else if (state.y < logicalHeight / 2) {
+      state.y = logicalHeight / 2;
+    } else if (state.y > state.worldHeight - logicalHeight / 2) {
+      state.y = state.worldHeight - logicalHeight / 2;
     }
   }
   ensureStateValid();
   return {
     canvas,
     renderer,
-    get x() {return state.x;},
-    get y() {return state.y;},
-    set x(value) {state.x = value; ensureStateValid();},
-    set y(value) {state.y = value; ensureStateValid();},
-    get width() {return state.width/state.zoom;},
-    get height() {return state.height/state.zoom;},
-    get worldWidth() {return state.worldWidth;},
-    get worldHeight() {return state.worldHeight;},
-    set worldWidth(value) {state.worldWidth = value; ensureStateValid();},
-    set worldHeight(value) {state.worldHeight = value; ensureStateValid();},
-    get zoom() {return state.zoom;},
-    set zoom(value) {state.zoom = value; ensureStateValid();},
+    get x() {
+      return state.x;
+    },
+    get y() {
+      return state.y;
+    },
+    set x(value) {
+      state.x = value;
+      ensureStateValid();
+    },
+    set y(value) {
+      state.y = value;
+      ensureStateValid();
+    },
+    get width() {
+      return state.width / state.zoom;
+    },
+    get height() {
+      return state.height / state.zoom;
+    },
+    get worldWidth() {
+      return state.worldWidth;
+    },
+    get worldHeight() {
+      return state.worldHeight;
+    },
+    set worldWidth(value) {
+      state.worldWidth = value;
+      ensureStateValid();
+    },
+    set worldHeight(value) {
+      state.worldHeight = value;
+      ensureStateValid();
+    },
+    get zoom() {
+      return state.zoom;
+    },
+    set zoom(value) {
+      state.zoom = value;
+      ensureStateValid();
+    },
     clear() {
       const ctx = this.renderer;
       ctx.save();
@@ -156,8 +185,8 @@ export function makeCamera(options: {
     },
     attach(parent = document.body) {
       parent.append(this.canvas);
-    }
-  }
+    },
+  };
 }
 
 /**
@@ -175,9 +204,12 @@ export async function makeSprite(src: string): Promise<Sprite> {
     await image.decode();
     cachedImages[src] = image;
   }
-  const result: Sprite = {image, draw: function (x, y, camera) {
-    drawSprite(this, x, y, camera);
-  }};
+  const result: Sprite = {
+    image,
+    draw: function (x, y, camera) {
+      drawSprite(this, x, y, camera);
+    },
+  };
   return result;
 }
 
@@ -204,7 +236,7 @@ export function makeInputManager(): InputManager {
     scrollUp: false,
     scrollDown: false,
     mouseX: 0,
-    mouseY: 0
+    mouseY: 0,
   };
   return {
     keyHeld(key) {
@@ -218,14 +250,30 @@ export function makeInputManager(): InputManager {
       return !!state.keysHeldLastFrame[key] &&
         !state.keysHeldThisFrame[key];
     },
-    get leftClick() {return state.leftClick;},
-    get leftClickDrag() {return state.leftClickDrag;},
-    get rightClick() {return state.rightClick;},
-    get rightClickDrag() {return state.rightClickDrag;},
-    get middleClick() {return state.middleClick;},
-    get middleClickDrag() {return state.middleClickDrag;},
-    get mouseX() {return state.mouseX;},
-    get mouseY() {return state.mouseY;},
+    get leftClick() {
+      return state.leftClick;
+    },
+    get leftClickDrag() {
+      return state.leftClickDrag;
+    },
+    get rightClick() {
+      return state.rightClick;
+    },
+    get rightClickDrag() {
+      return state.rightClickDrag;
+    },
+    get middleClick() {
+      return state.middleClick;
+    },
+    get middleClickDrag() {
+      return state.middleClickDrag;
+    },
+    get mouseX() {
+      return state.mouseX;
+    },
+    get mouseY() {
+      return state.mouseY;
+    },
     handleEvent(event) {
       if (event instanceof KeyboardEvent && event.type == "keydown") {
         state.keysHeldThisFrame[event.key] = true;
@@ -293,20 +341,24 @@ export function makeInputManager(): InputManager {
       state.middleClick = false;
     },
     attach(target = document.querySelector("canvas")!) {
-      for (const eventType of [
-        "keydown",
-        "keyup"
-      ]) {
+      for (
+        const eventType of [
+          "keydown",
+          "keyup",
+        ]
+      ) {
         document.addEventListener(eventType, this.handleEvent.bind(this));
       }
-      for (const eventType of [
-        "mousedown",
-        "mouseup",
-        "mousemove"
-      ]) {
+      for (
+        const eventType of [
+          "mousedown",
+          "mouseup",
+          "mousemove",
+        ]
+      ) {
         target.addEventListener(eventType, this.handleEvent.bind(this));
       }
-    }
+    },
   };
 }
 
@@ -321,18 +373,20 @@ export function makeInputManager(): InputManager {
  * and manually request loop iterations with `tick`.
  */
 export function makeMainLoop(width: number, height: number): MainLoop {
-  const state = {lastTick: performance.now()};
+  const state = { lastTick: performance.now() };
   return {
     camera: makeCamera({
-      x: width/2, y: height/2,
-      width, height,
+      x: width / 2,
+      y: height / 2,
+      width,
+      height,
       worldWidth: width,
-      worldHeight: height
+      worldHeight: height,
     }),
     input: makeInputManager(),
     async tick(fps = 60) {
       this.input.flush();
-      const ms = 1000/fps;
+      const ms = 1000 / fps;
       while (performance.now() - state.lastTick < ms) {
         await new Promise(requestAnimationFrame);
       }
@@ -342,7 +396,7 @@ export function makeMainLoop(width: number, height: number): MainLoop {
     attach(parent = document.body) {
       this.camera.attach(parent);
       this.input.attach(this.camera.canvas);
-    }
+    },
   };
 }
 
@@ -356,13 +410,13 @@ function drawSprite(what: Sprite, x: number, y: number, camera: Camera) {
   ctx.resetTransform();
   ctx.scale(camera.zoom, camera.zoom);
   ctx.translate(
-    x + camera.width/2 - camera.x,
-    y + camera.height/2 - camera.y
+    x + camera.width / 2 - camera.x,
+    y + camera.height / 2 - camera.y,
   );
   ctx.drawImage(
     what.image,
-    -what.image.width/2,
-    -what.image.height/2
+    -what.image.width / 2,
+    -what.image.height / 2,
   );
   ctx.restore();
 }
@@ -372,7 +426,7 @@ function drawSprite(what: Sprite, x: number, y: number, camera: Camera) {
 export async function testUI(): Promise<void> {
   const mainLoop = makeMainLoop(640, 480);
   const sprite = await makeSprite("/assets/testbg.png");
-  const {camera, input} = mainLoop;
+  const { camera, input } = mainLoop;
   mainLoop.attach();
   for (;; await mainLoop.tick()) {
     sprite.draw(320, 240, mainLoop.camera);

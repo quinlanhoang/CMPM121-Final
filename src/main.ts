@@ -1,3 +1,3 @@
-import {testUI} from "./ui.ts";
+import { testUI } from "./ui.ts";
 
 testUI();
