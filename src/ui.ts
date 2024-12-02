@@ -69,6 +69,7 @@ export function makeCamera(options: {
       state.y = state.worldHeight - logicalHeight/2;
     }
   }
+  ensureStateValid();
   return {
     canvas,
     renderer,
