@@ -58,17 +58,60 @@ export interface MainLoop {
   camera: Camera;
   input: InputManager;
   /**
-   * Flushes the input manager,
-   * waits for the next tick according to the given fps rate
-   * (during which time new input events are aggregated),
-   * and then clears the canvas in preparation for drawing.
-   * When this function resolves, a new tick has started,
-   * and is ready for the caller to perform game logic
-   * and draw to the canvas anew.
+   * Manually ticks the main loop at the given fps.
+   * This function is mostly for internal purposes;
+   * you probably want `start` instead.
    * If no fps rate is given, 60 is assumed.
+   * "Ticking" the loop entails the following behaviors:
+   * clears the canvas in preparation for drawing,
+   * calls and unsubscribes all subscribed callbacks,
+   * flushes the input manager, and finally,
+   * waits for the next tick according to the given fps rate
+   * (during which time new input events are aggregated).
+   * When this function resolves,
+   * all callbacks that were subscribed at the time of the call to `tick`
+   * have been called and unsubscribed.
+   * If those callbacks subscribed further callbacks,
+   * the further callbacks will remain subscribed and not yet called.
    */
   tick(fps?: number): Promise<void>;
+  /**
+   * Attaches the camera to the given element,
+   * and the input manager to the camera.
+   */
   attach(parent?: HTMLElement): void;
+  /**
+   * Whether the main loop is running (i.e. `start` has been called
+   * and there has been no call to `stop` since the last call to `start`).
+   */
+  get running(): boolean;
+  /**
+   * Starts the main loop.
+   * If the scheduler is already running, does nothing.
+   * The returned promise resolves when the loop stops.
+   * If no fps rate is given, 60 is assumed.
+   * While the main loop is running, `tick` will be called
+   * at the given fps rate.
+   */
+  start(fps?: number): Promise<void>;
+  /**
+   * Stops the main loop.
+   * If the scheduler is not running, does nothing.
+   */
+  stop(): void;
+  /**
+   * Subscribes a callback to the main loop.
+   * The loop will dequeue and run all subscribed callbacks
+   * the next time `tick` is called
+   * (which will happen automatically if the main loop is running).
+   */
+  subscribe<T>(callback: () => T): Promise<T>;
+  /**
+   * Subscribes and awaits a no-op callback on the main loop
+   * N times in a row (default 1), thereby sleeping N ticks.
+   * A job can use `await mainLoop.sleep()` to move on to the next tick.
+   */
+  sleep(ticks?: number): Promise<void>;
 }
 
 /**
@@ -369,11 +412,15 @@ export function makeInputManager(): InputManager {
  * those, but not the canvas dimensions, can be changed after the fact
  * as needed. The main loop will neither begin automatically
  * nor attach itself to the document automatically;
- * you must attach it with `attach`
- * and manually request loop iterations with `tick`.
+ * you must attach it with `attach` and manually start it with `start`.
  */
 export function makeMainLoop(width: number, height: number): MainLoop {
-  const state = { lastTick: performance.now() };
+  const state = {
+    lastTick: performance.now(),
+    subscribersProcessing: [] as (() => void)[],
+    subscribersWaiting: [] as (() => void)[],
+    running: false,
+  };
   return {
     camera: makeCamera({
       x: width / 2,
@@ -385,17 +432,51 @@ export function makeMainLoop(width: number, height: number): MainLoop {
     }),
     input: makeInputManager(),
     async tick(fps = 60) {
+      this.camera.clear();
+      for (const subscriber of state.subscribersWaiting) {
+        state.subscribersProcessing.push(subscriber);
+      }
+      state.subscribersWaiting.length = 0;
+      for (const subscriber of state.subscribersProcessing) {
+        subscriber();
+      }
+      state.subscribersProcessing.length = 0;
       this.input.flush();
       const ms = 1000 / fps;
       while (performance.now() - state.lastTick < ms) {
         await new Promise(requestAnimationFrame);
       }
       state.lastTick = performance.now();
-      this.camera.clear();
     },
     attach(parent = document.body) {
       this.camera.attach(parent);
       this.input.attach(this.camera.canvas);
+    },
+    get running() {
+      return state.running;
+    },
+    async start(fps = 60) {
+      state.running = true;
+      while (state.running) {
+        await this.tick(fps);
+      }
+    },
+    stop() {
+      state.subscribersProcessing.length = 0;
+      state.subscribersWaiting.length = 0;
+      state.running = false;
+    },
+    subscribe<T>(callback: () => T) {
+      return new Promise<T>((resolve) => {
+        state.subscribersWaiting.push(() => {
+          resolve(callback());
+        });
+      });
+    },
+    async sleep(ticks = 1) {
+      for (; ticks > 0; --ticks) {
+        await this.subscribe(() => {});
+      }
     },
   };
 }
@@ -428,8 +509,9 @@ export async function testUI(): Promise<void> {
   const sprite = await makeSprite("/assets/testbg.png");
   const { camera, input } = mainLoop;
   mainLoop.attach();
-  for (;; await mainLoop.tick()) {
-    sprite.draw(320, 240, mainLoop.camera);
+  mainLoop.start();
+  for (;; await mainLoop.sleep()) {
+    sprite.draw(320, 240, camera);
     if (input.keyHeld("ArrowUp")) {
       camera.y -= 1;
     }
