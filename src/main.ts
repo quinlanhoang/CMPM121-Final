@@ -1,3 +1,3 @@
-import { testUI } from "./ui.ts";
+import { testGenericLogic } from "./generic_logic.ts";
 
-testUI();
+testGenericLogic();

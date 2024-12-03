@@ -9,8 +9,8 @@
  * to correctly draw itself.
  */
 export interface Camera {
-  canvas: HTMLCanvasElement;
-  renderer: CanvasRenderingContext2D;
+  get canvas(): HTMLCanvasElement;
+  get renderer(): CanvasRenderingContext2D;
   get x(): number;
   get y(): number;
   set x(value: number);
@@ -55,8 +55,8 @@ export interface InputManager {
  * and capping the framerate.
  */
 export interface MainLoop {
-  camera: Camera;
-  input: InputManager;
+  get camera(): Camera;
+  get input(): InputManager;
   /**
    * Manually ticks the main loop at the given fps.
    * This function is mostly for internal purposes;
