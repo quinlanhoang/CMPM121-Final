@@ -10,12 +10,11 @@ const nextDayButton = document.getElementById("next-day-button") as HTMLElement;
 const sowButton = document.getElementById("sow-button") as HTMLElement;
 const reapButton = document.getElementById("reap-button") as HTMLElement;
 const inventoryContainer = document.getElementById("inventory-container")!;
-const plantHelp = document.getElementById("plant-help") as HTMLElement;
+//const plantHelp = document.getElementById("plant-help") as HTMLElement;
 const plantHelpToolTip = document.getElementById("plant-help-tool-tip")!;
 
 // defining plant type enum for easy reference across the application
 enum PlantType {
-  None = "None",
   Circle = "Circle",
   Triangle = "Triangle",
   Square = "Square",
@@ -26,7 +25,7 @@ interface Cell {
   sun: number; 
   water: number;
   growth: number; // 0 = barren; 1-3 = plant growth stages
-  plant: PlantType; 
+  plant: PlantType | null; 
 }
 
 // global state variables
@@ -66,7 +65,7 @@ function initializeGrid() {
           sun: 0,
           water: 0,
           growth: 0,
-          plant: PlantType.None,
+          plant: null,
         });
       }
     }
@@ -118,7 +117,7 @@ function drawGrid() {
 
       // set background color based on plant type
       ctx.fillStyle = "#d2b48c"; // default dirt
-      if (cell.plant !== PlantType.None) {
+      if (cell.plant !== null) {
         if (cell.growth === 1) ctx.fillStyle = "#3a5f0b";
         if (cell.growth === 2) ctx.fillStyle = "#2e4b06";
         if (cell.growth === 3) ctx.fillStyle = "#1e3202";
@@ -175,7 +174,7 @@ function drawPlayer() {
 // sows a selected plant in the current cell if empty
 function sowPlant() {
   const cell = grid[player.y][player.x];
-  if (!selectedInventoryPlant || cell.plant !== PlantType.None) return;
+  if (!selectedInventoryPlant || cell.plant !== null) return;
 
   cell.plant = selectedInventoryPlant;
   inventory[selectedInventoryPlant]--;
@@ -186,9 +185,9 @@ function sowPlant() {
 // reaps the plant from the current cell and adds it to the inventory
 function reapPlant() {
   const cell = grid[player.y][player.x];
-  if (cell.plant !== PlantType.None) {
+  if (cell.plant !== null) {
     inventory[cell.plant]++;
-    cell.plant = PlantType.None;
+    cell.plant = null;
     updateInventoryUI();
     draw();
   }
@@ -197,10 +196,13 @@ function reapPlant() {
 // updates the inventory list displayed in the right sidebar
 function updateInventoryUI() {
   inventoryContainer.innerHTML = ""; // clear container
-  Object.keys(inventory).forEach(plantType => {
+  (Object.keys(inventory) as PlantType[]).forEach(plantType => {
     const li = document.createElement("li");
-    li.textContent = `${plantType}: ${inventory[plantType as PlantType]}`;
-    li.onclick = () => selectPlantType(plantType as PlantType);
+    li.textContent = `${plantType}: ${inventory[plantType]}`;
+    li.onclick = () => {
+      selectedInventoryPlant = plantType;
+      updateInventoryUI();
+    }
 
     if (plantType === selectedInventoryPlant) li.classList.add("selected");
 
@@ -241,7 +243,7 @@ function movePlayer(dx: number, dy: number) {
 function nextDay() {
   grid.forEach(row =>
     row.forEach(cell => {
-      if (cell.plant !== PlantType.None) {
+      if (cell.plant !== null) {
         cell.water = Math.min(cell.water + Math.floor(Math.random() * 21) + 5, 100); // random water
         cell.sun = Math.min(cell.sun + Math.floor(Math.random() * 11) + 5, 100); // random sunlight
       }
