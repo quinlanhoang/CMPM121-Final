@@ -119,6 +119,18 @@ function draw() {
   drawPlayer();
 }
 
+function gridPointInBounds(row: number, col: number): boolean {
+  return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+}
+
+function getCell(row: number, col: number): Cell | null {
+  if (gridPointInBounds(row, col)) {
+    return grid[row][col];
+  } else {
+    return null;
+  }
+}
+
 function gridCellULCorner(row: number, col: number): Point {
   return {
     x: GRID_PADDING + col * (CELL_SIZE + CELL_PADDING),
@@ -131,10 +143,7 @@ function canvasPointToGridPoint(x: number, y: number): GridPoint | null {
     col: Math.floor((x - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
     row: Math.floor((y - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
   };
-  if (
-    result.col < 0 || result.col >= COLS ||
-    result.row < 0 || result.row >= ROWS
-  ) {
+  if (!gridPointInBounds(result.row, result.col)) {
     return null;
   } else {
     const ulCorner = gridCellULCorner(result.row, result.col);
@@ -154,7 +163,7 @@ function drawGrid() {
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
       const { x, y } = gridCellULCorner(row, col);
-      const cell = grid[row][col];
+      const cell = getCell(row, col)!;
 
       // set background color based on plant type
       ctx.fillStyle = "#d2b48c"; // default dirt
@@ -220,8 +229,8 @@ function drawPlayer() {
 
 // sows a selected plant in the current cell if empty
 function sowPlant() {
-  const cell = grid[player.row][player.col];
-  if (!selectedInventoryPlant || cell.plant !== null) return;
+  const cell = getCell(player.row, player.col);
+  if (!cell || !selectedInventoryPlant || cell.plant !== null) return;
 
   cell.plant = selectedInventoryPlant;
   inventory[selectedInventoryPlant]--;
@@ -231,8 +240,8 @@ function sowPlant() {
 
 // reaps the plant from the current cell and adds it to the inventory
 function reapPlant() {
-  const cell = grid[player.row][player.col];
-  if (cell.plant !== null) {
+  const cell = getCell(player.row, player.col);
+  if (cell && cell.plant !== null) {
     inventory[cell.plant]++;
     cell.plant = null;
     updateInventoryUI();
@@ -277,10 +286,10 @@ function updatePlantHelp(cell: Cell) {
 function movePlayer(cols: number, rows: number) {
   const newCol = player.col + cols;
   const newRow = player.row + rows;
-  if (newCol >= 0 && newCol < COLS && newRow >= 0 && newRow < ROWS) {
+  const cell = getCell(newRow, newCol);
+  if (cell) {
     player.col = newCol;
     player.row = newRow;
-    const cell = grid[player.row][player.col];
     typeDisplay.textContent = cell.plant;
     waterDisplay.textContent = `${cell.water}`;
     sunDisplay.textContent = `${cell.sun}`;
