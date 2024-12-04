@@ -237,6 +237,7 @@ function sowPlant() {
   if (!cell || !selectedInventoryPlant || cell.plant !== null) return;
 
   cell.plant = selectedInventoryPlant;
+  cell.growth = 1;
   inventory[selectedInventoryPlant]--;
   updateInventoryUI();
   draw();
@@ -246,8 +247,9 @@ function sowPlant() {
 function reapPlant() {
   const cell = getCell(player.row, player.col);
   if (cell && cell.plant !== null) {
-    inventory[cell.plant]++;
+    inventory[cell.plant] += cell.growth;
     cell.plant = null;
+    cell.growth = 0;
     updateInventoryUI();
     draw();
   }
