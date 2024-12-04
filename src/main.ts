@@ -28,13 +28,15 @@ interface Cell {
   plant: PlantType | null; 
 }
 
+interface Point { x: number, y: number };
+
 // global state variables
 const ROWS = 10; 
 const COLS = 12; 
 let CELL_SIZE = 0; 
 let CELL_PADDING = 0;
 let GRID_PADDING = 0; 
-const player = { x: 0, y: 0 }; // player’s current position in the grid
+const player: Point = { x: 0, y: 0 }; // player’s current position in the grid
 let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
 
 const inventory: { [key in PlantType]: number } = {
@@ -107,12 +109,18 @@ function draw() {
   drawPlayer(); 
 }
 
+function gridCellULCorner(row: number, col: number): Point {
+  return {
+    x: GRID_PADDING + col * (CELL_SIZE + CELL_PADDING),
+    y: GRID_PADDING + row * (CELL_SIZE + CELL_PADDING),
+  };
+}
+
 // draws the grid and the plants inside it
 function drawGrid() {
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
-      const x = GRID_PADDING + col * (CELL_SIZE + CELL_PADDING);
-      const y = GRID_PADDING + row * (CELL_SIZE + CELL_PADDING);
+      const {x, y} = gridCellULCorner(row, col);
       const cell = grid[row][col];
 
       // set background color based on plant type
@@ -162,8 +170,9 @@ function drawSquare(x: number, y: number) {
 
 // draws the player 
 function drawPlayer() {
-  const x = GRID_PADDING + player.x * (CELL_SIZE + CELL_PADDING) + CELL_SIZE / 2;
-  const y = GRID_PADDING + player.y * (CELL_SIZE + CELL_PADDING) + CELL_SIZE / 2;
+  let {x, y} = gridCellULCorner(player.y, player.x);
+  x += CELL_SIZE / 2;
+  y += CELL_SIZE / 2;
 
   ctx.fillStyle = "#000000"; 
   ctx.beginPath();
