@@ -1,0 +1,94 @@
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #6b8e23;
+    font-family: Arial, sans-serif;
+  }
+  
+  header {
+    text-align: center;
+    background-color: #2e4b06; 
+    color: white;
+    padding: 15px;
+    font-size: 24px;
+  }
+  
+  main {
+    display: flex;
+    flex: 1;
+  }
+  
+  #ui-box, #inventory-box {
+    width: 20%;
+    background-color: #d2b48c; 
+    padding: 20px;
+    box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid black;
+  }
+  
+  #ui-box {
+    border-right: 2px solid #ddd;
+  }
+  
+  #inventory-box {
+    border-left: 2px solid #ddd;
+    display: flex;
+    flex-direction: column; 
+  }
+  
+  #inventory-container {
+    flex: 1; 
+    padding: 0;
+    list-style: none;
+    overflow-y: auto; 
+    margin-bottom: 10px; 
+  }
+  
+  #plant-help {
+    flex: 1; 
+    background-color: #ffffe0; 
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0px 5px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Inventory List Items */
+  #inventory-container li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid black;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s;
+  }
+  
+  #inventory-container li:hover {
+    background-color: #c4e17f; 
+  }
+  
+  #inventory-container .selected {
+    background-color: lightblue; /* highlight selected plant */
+    font-weight: bold; /* make selected plant stand out */
+  }
+  
+  /* Game Canvas */
+  #game-wrapper {
+    flex: 1; /* fill remaining space dynamically */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  canvas {
+    background-color: #3e2300; 
+    border: 1px solid black;
+  }

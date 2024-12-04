@@ -1,10 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>CMPM 121 Final Project</title>
-    <link rel="stylesheet" type="text/css" href="/style.css" />
-    <script type="module" src="/src/main.ts" defer></script>
-  </head>
-  <body></body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Farmer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Grid Farmer</h1>
+    </header>
+    <main>
+        <!-- Left Sidebar -->
+        <aside id="ui-box">
+            <h2>Plant Details</h2>
+            <div id="plant-info">
+                <p>Type: <span id="plant-type">None</span></p>
+                <p>Water: <span id="plant-water">0</span>/100</p>
+                <p>Sun: <span id="plant-sun">0</span>/100</p>
+            </div>
+            <button id="reap-button">Reap</button>
+            <button id="sow-button">Sow</button>
+            <button id="next-day-button">Next Day</button>
+        </aside>
+
+        <!-- Game Canvas -->
+        <div id="game-wrapper">
+            <canvas id="game-grid"></canvas>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside id="inventory-box">
+            <h2>Inventory</h2>
+            <ul id="inventory-container">
+                <!-- Dynamic inventory added here -->
+            </ul>
+            <div id="plant-help">
+                <h3>Plant Help</h3>
+                <p id="plant-help-tool-tip">No plant selected</p>
+            </div>
+        </aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
