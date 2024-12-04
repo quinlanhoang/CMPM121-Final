@@ -412,7 +412,7 @@ function nextDay() {
         cell.water + Math.floor(Math.random() * 21) + 5,
         100,
       ); // random water
-      cell.sun = Math.min(cell.sun + Math.floor(Math.random() * 11) + 5, 100); // random sunlight
+      cell.sun = Math.min(Math.floor(Math.random() * 11) + 5, 100); // random sunlight
     })
   );
   draw();
