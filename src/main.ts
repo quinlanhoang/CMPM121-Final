@@ -239,8 +239,7 @@ function sowPlant() {
   cell.plant = selectedInventoryPlant;
   cell.growth = 1;
   inventory[selectedInventoryPlant]--;
-  updateInventoryUI();
-  draw();
+  updateDisplay();
 }
 
 // reaps the plant from the current cell and adds it to the inventory
@@ -250,8 +249,7 @@ function reapPlant() {
     inventory[cell.plant] += cell.growth;
     cell.plant = null;
     cell.growth = 0;
-    updateInventoryUI();
-    draw();
+    updateDisplay();
   }
 }
 
@@ -389,6 +387,12 @@ function growPlants() {
   }
 }
 
+function updatePlantSummary(cell: Cell) {
+  typeDisplay.textContent = cell.plant;
+  waterDisplay.textContent = `${cell.water}`;
+  sunDisplay.textContent = `${cell.sun}`;
+}
+
 // moves the player and updates ui details of the cell
 function movePlayer(cols: number, rows: number) {
   const newCol = player.col + cols;
@@ -397,12 +401,8 @@ function movePlayer(cols: number, rows: number) {
   if (cell) {
     player.col = newCol;
     player.row = newRow;
-    typeDisplay.textContent = cell.plant;
-    waterDisplay.textContent = `${cell.water}`;
-    sunDisplay.textContent = `${cell.sun}`;
-    updatePlantHelp(cell);
   }
-  draw();
+  updateDisplay();
 }
 
 // simulates the next day by adding water and sunlight to plants
@@ -417,7 +417,7 @@ function nextDay() {
       cell.sun = Math.min(Math.floor(Math.random() * 100), 100); // random sunlight
     })
   );
-  draw();
+  updateDisplay();
 }
 
 function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
@@ -432,6 +432,16 @@ function handleGridClicked(x: number, y: number) {
   if (gridPoint && gridPointsAdjacent(player, gridPoint)) {
     movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
   }
+}
+
+function updateDisplay() {
+  updateInventoryUI();
+  const cell = getCell(player.row, player.col);
+  if (cell) {
+    updatePlantSummary(cell);
+    updatePlantHelp(cell);
+  }
+  draw();
 }
 
 // initializes all input events
@@ -454,9 +464,8 @@ function initializeEvents() {
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
-  updateInventoryUI();
-  draw();
   initializeEvents();
+  updateDisplay();
 }
 
 initializeGame();
