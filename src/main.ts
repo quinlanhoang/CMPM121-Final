@@ -314,11 +314,8 @@ function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
 
 function handleGridClicked(x: number, y: number) {
   const gridPoint = canvasPointToGridPoint(x, y);
-  if (gridPoint) {
-    const { row, col } = gridPoint;
-    if (gridPointsAdjacent(player, gridPoint)) {
-      movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
-    }
+  if (gridPoint && gridPointsAdjacent(player, gridPoint)) {
+    movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
   }
 }
 
