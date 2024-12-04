@@ -22,21 +22,27 @@ enum PlantType {
 
 // definition of a grid cell and its properties
 interface Cell {
-  sun: number; 
+  sun: number;
   water: number;
   growth: number; // 0 = barren; 1-3 = plant growth stages
-  plant: PlantType | null; 
+  plant: PlantType | null;
 }
 
-interface Point { x: number, y: number };
-interface GridPoint { row: number, col: number };
+interface Point {
+  x: number;
+  y: number;
+}
+interface GridPoint {
+  row: number;
+  col: number;
+}
 
 // global state variables
-const ROWS = 10; 
-const COLS = 12; 
-let CELL_SIZE = 0; 
+const ROWS = 10;
+const COLS = 12;
+let CELL_SIZE = 0;
 let CELL_PADDING = 0;
-let GRID_PADDING = 0; 
+let GRID_PADDING = 0;
 const player: GridPoint = { row: 0, col: 0 }; // player’s current position in the grid
 let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
 
@@ -46,7 +52,7 @@ const inventory: { [key in PlantType]: number } = {
   [PlantType.Square]: 0,
 };
 
-let grid: Cell[][] = []; 
+let grid: Cell[][] = [];
 
 // initializes the grid with random plants and empty cells
 function initializeGrid() {
@@ -90,7 +96,10 @@ function recalculateDimensions() {
   const MAX_PADDING = 30;
 
   // dynamically calculate cell and padding sizes
-  const maxSize = Math.min(globalThis.innerWidth * 0.6, globalThis.innerHeight * 0.8);
+  const maxSize = Math.min(
+    globalThis.innerWidth * 0.6,
+    globalThis.innerHeight * 0.8,
+  );
   CELL_SIZE = Math.floor(maxSize / Math.max(ROWS, COLS)) * 0.8;
   CELL_PADDING = Math.floor(CELL_SIZE * 0.2);
   GRID_PADDING = Math.min(MAX_PADDING, Math.max(MIN_PADDING, CELL_PADDING * 2));
@@ -105,9 +114,9 @@ function recalculateDimensions() {
 
 // main function to draw the entire game
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGrid();
-  drawPlayer(); 
+  drawPlayer();
 }
 
 function gridCellULCorner(row: number, col: number): Point {
@@ -120,7 +129,7 @@ function gridCellULCorner(row: number, col: number): Point {
 function canvasPointToGridPoint(x: number, y: number): GridPoint | null {
   const result = {
     col: Math.floor((x - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
-    row: Math.floor((y - GRID_PADDING) / (CELL_SIZE + CELL_PADDING))
+    row: Math.floor((y - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
   };
   if (
     result.col < 0 || result.col >= COLS ||
@@ -144,7 +153,7 @@ function canvasPointToGridPoint(x: number, y: number): GridPoint | null {
 function drawGrid() {
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
-      const {x, y} = gridCellULCorner(row, col);
+      const { x, y } = gridCellULCorner(row, col);
       const cell = grid[row][col];
 
       // set background color based on plant type
@@ -189,16 +198,21 @@ function drawTriangle(x: number, y: number) {
 // draws a blue square plant
 function drawSquare(x: number, y: number) {
   ctx.fillStyle = "#4682b4";
-  ctx.fillRect(x + CELL_SIZE / 4, y + CELL_SIZE / 4, CELL_SIZE / 2, CELL_SIZE / 2);
+  ctx.fillRect(
+    x + CELL_SIZE / 4,
+    y + CELL_SIZE / 4,
+    CELL_SIZE / 2,
+    CELL_SIZE / 2,
+  );
 }
 
-// draws the player 
+// draws the player
 function drawPlayer() {
-  let {x, y} = gridCellULCorner(player.row, player.col);
+  let { x, y } = gridCellULCorner(player.row, player.col);
   x += CELL_SIZE / 2;
   y += CELL_SIZE / 2;
 
-  ctx.fillStyle = "#000000"; 
+  ctx.fillStyle = "#000000";
   ctx.beginPath();
   ctx.arc(x, y, CELL_SIZE / 4, 0, Math.PI * 2);
   ctx.fill();
@@ -229,13 +243,13 @@ function reapPlant() {
 // updates the inventory list displayed in the right sidebar
 function updateInventoryUI() {
   inventoryContainer.innerHTML = ""; // clear container
-  (Object.keys(inventory) as PlantType[]).forEach(plantType => {
+  (Object.keys(inventory) as PlantType[]).forEach((plantType) => {
     const li = document.createElement("li");
     li.textContent = `${plantType}: ${inventory[plantType]}`;
     li.onclick = () => {
       selectedInventoryPlant = plantType;
       updateInventoryUI();
-    }
+    };
 
     if (plantType === selectedInventoryPlant) li.classList.add("selected");
 
@@ -246,11 +260,14 @@ function updateInventoryUI() {
 // updates the tooltip in the plant help section dynamically
 function updatePlantHelp(cell: Cell) {
   if (cell.plant === PlantType.Circle) {
-    plantHelpToolTip.textContent = "circle plants cannot grow if diagonal plots are occupied.";
+    plantHelpToolTip.textContent =
+      "circle plants cannot grow if diagonal plots are occupied.";
   } else if (cell.plant === PlantType.Triangle) {
-    plantHelpToolTip.textContent = "triangle plants cannot grow if adjacent plots are occupied.";
+    plantHelpToolTip.textContent =
+      "triangle plants cannot grow if adjacent plots are occupied.";
   } else if (cell.plant === PlantType.Square) {
-    plantHelpToolTip.textContent = "square plants cannot grow if surrounding plots are occupied.";
+    plantHelpToolTip.textContent =
+      "square plants cannot grow if surrounding plots are occupied.";
   } else {
     plantHelpToolTip.textContent = "no plants here.";
   }
@@ -274,10 +291,13 @@ function movePlayer(cols: number, rows: number) {
 
 // simulates the next day by adding water and sunlight to plants
 function nextDay() {
-  grid.forEach(row =>
-    row.forEach(cell => {
+  grid.forEach((row) =>
+    row.forEach((cell) => {
       if (cell.plant !== null) {
-        cell.water = Math.min(cell.water + Math.floor(Math.random() * 21) + 5, 100); // random water
+        cell.water = Math.min(
+          cell.water + Math.floor(Math.random() * 21) + 5,
+          100,
+        ); // random water
         cell.sun = Math.min(cell.sun + Math.floor(Math.random() * 11) + 5, 100); // random sunlight
       }
     })
@@ -295,7 +315,7 @@ function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
 function handleGridClicked(x: number, y: number) {
   const gridPoint = canvasPointToGridPoint(x, y);
   if (gridPoint) {
-    const {row, col} = gridPoint;
+    const { row, col } = gridPoint;
     if (gridPointsAdjacent(player, gridPoint)) {
       movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
     }
@@ -304,7 +324,7 @@ function handleGridClicked(x: number, y: number) {
 
 // initializes all input events
 function initializeEvents() {
-  globalThis.addEventListener("keydown", e => {
+  globalThis.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp") movePlayer(0, -1);
     if (e.key === "ArrowDown") movePlayer(0, 1);
     if (e.key === "ArrowLeft") movePlayer(-1, 0);
@@ -314,7 +334,7 @@ function initializeEvents() {
   sowButton.addEventListener("click", sowPlant);
   reapButton.addEventListener("click", reapPlant);
   nextDayButton.addEventListener("click", nextDay);
-  canvas.addEventListener("click", e => {
+  canvas.addEventListener("click", (e) => {
     handleGridClicked(e.offsetX, e.offsetY);
   });
 }
