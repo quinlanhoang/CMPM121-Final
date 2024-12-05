@@ -455,6 +455,16 @@ function updateDayCounter() {
   dayCounterDisplay.innerHTML = `Day ${day}`;
 }
 
+function gameWon(): boolean {
+  let total = 0;
+  for (const row of grid) {
+    for (const cell of row) {
+      total += cell.growth;
+    }
+  }
+  return total >= 100;
+}
+
 function updateDisplay() {
   updateInventoryUI();
   const cell = getCell(player.row, player.col);
@@ -464,6 +474,10 @@ function updateDisplay() {
     updatePlantHelp(cell);
   }
   draw();
+  if (gameWon()) {
+    alert("You win! The total combined growth level of your garden is at least 200.");
+    location.reload();
+  }
 }
 
 // initializes all input events
