@@ -238,7 +238,14 @@ function drawPlayer() {
 // sows a selected plant in the current cell if empty
 function sowPlant() {
   const cell = getCell(player.row, player.col);
-  if (!cell || !selectedInventoryPlant || cell.plant !== null) return;
+  if (
+    !cell ||
+    !selectedInventoryPlant ||
+    cell.plant !== null ||
+    inventory[selectedInventoryPlant] <= 0
+  ) {
+    return;
+  }
 
   cell.plant = selectedInventoryPlant;
   cell.growth = 1;
