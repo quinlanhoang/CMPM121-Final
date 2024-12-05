@@ -498,11 +498,18 @@ function initializeEvents() {
   });
 }
 
+function grantInitialSeeds() {
+  inventory.Circle = 1;
+  inventory.Square = 1;
+  inventory.Triangle = 1;
+}
+
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
   initializeEvents();
   distributeNaturalResources();
+  grantInitialSeeds();
   updateDisplay();
 }
 
