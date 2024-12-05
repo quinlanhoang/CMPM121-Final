@@ -488,6 +488,21 @@ function initializeEvents() {
     if (e.key === "ArrowDown") movePlayer(0, 1);
     if (e.key === "ArrowLeft") movePlayer(-1, 0);
     if (e.key === "ArrowRight") movePlayer(1, 0);
+    if (e.key === "r") reapPlant();
+    if (e.key === "s") sowPlant();
+    if (e.key === "n") nextDay();
+    if (e.key === "1") {
+      selectedInventoryPlant = PlantType.Circle;
+      updateDisplay();
+    }
+    if (e.key === "2") {
+      selectedInventoryPlant = PlantType.Triangle;
+      updateDisplay();
+    }
+    if (e.key === "3") {
+      selectedInventoryPlant = PlantType.Square;
+      updateDisplay();
+    }
   });
 
   sowButton.addEventListener("click", sowPlant);
