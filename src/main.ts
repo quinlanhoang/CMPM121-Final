@@ -66,8 +66,8 @@ function initializeGrid() {
   for (let row = 0; row < ROWS; row++) {
     const newRow: Cell[] = [];
     for (let col = 0; col < COLS; col++) {
-      if (Math.random() < 0.3) {
-        // 30% chance to randomly place a plant
+      if (Math.random() < 0.02) {
+        // 2% chance to randomly place a plant
         newRow.push({
           row, col,
           sun: 0,
