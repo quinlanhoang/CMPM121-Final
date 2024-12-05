@@ -5,7 +5,9 @@ const canvas = document.getElementById("game-grid") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 const dayCounterDisplay = document.getElementById("day-counter") as HTMLElement;
 const typeDisplay = document.getElementById("plant-type") as HTMLElement;
-const growthLevelDisplay = document.getElementById("plant-growth-level") as HTMLElement;
+const growthLevelDisplay = document.getElementById(
+  "plant-growth-level",
+) as HTMLElement;
 const waterDisplay = document.getElementById("plant-water") as HTMLElement;
 const sunDisplay = document.getElementById("plant-sun") as HTMLElement;
 const canGrowDisplay = document.getElementById("plant-can-grow") as HTMLElement;
@@ -25,8 +27,8 @@ enum PlantType {
 
 // definition of a grid cell and its properties
 interface Cell {
-  row: number,
-  col: number,
+  row: number;
+  col: number;
   sun: number;
   water: number;
   growth: number; // 0 = barren; 1-3 = plant growth stages
@@ -69,7 +71,8 @@ function initializeGrid() {
       if (Math.random() < 0.02) {
         // 2% chance to randomly place a plant
         newRow.push({
-          row, col,
+          row,
+          col,
           sun: 0,
           water: 0,
           growth: 1,
@@ -78,7 +81,8 @@ function initializeGrid() {
       } else {
         // empty cell
         newRow.push({
-          row, col,
+          row,
+          col,
           sun: 0,
           water: 0,
           growth: 0,
@@ -296,22 +300,27 @@ function updatePlantHelp(cell: Cell) {
     }
     switch (cell.growth) {
       case 0:
-        plantHelpToolTip.textContent += "there is a plant at this cell, but the cell's growth level is still 0, indicating no plant. this is a bug.\n";
+        plantHelpToolTip.textContent +=
+          "there is a plant at this cell, but the cell's growth level is still 0, indicating no plant. this is a bug.\n";
         break;
       case 1:
-        plantHelpToolTip.textContent += "level 1 plants require at least 50 water and 50 sun.\n";
+        plantHelpToolTip.textContent +=
+          "level 1 plants require at least 50 water and 50 sun.\n";
         break;
       case 2:
-        plantHelpToolTip.textContent += "level 2 plants require at least 75 water and 75 sun.\n";
+        plantHelpToolTip.textContent +=
+          "level 2 plants require at least 75 water and 75 sun.\n";
         break;
       default:
-        plantHelpToolTip.textContent += "this plant has reached its growth limit and must be harvested.\n";
+        plantHelpToolTip.textContent +=
+          "this plant has reached its growth limit and must be harvested.\n";
         break;
     }
   } else {
     plantHelpToolTip.textContent = "no plants here.\n";
   }
-  plantHelpToolTip.textContent += `currently, this spot has ${cell.water} water and ${cell.sun} sun.\n`;
+  plantHelpToolTip.textContent +=
+    `currently, this spot has ${cell.water} water and ${cell.sun} sun.\n`;
   if (cell.plant) {
     if (plantCanGrow(cell)) {
       plantHelpToolTip.textContent += "this plant will grow today!\n";
@@ -324,11 +333,15 @@ function updatePlantHelp(cell: Cell) {
 function plantHasRoomToGrow(cell: Cell): boolean {
   const gridPointsToCheck: GridPoint[] = [];
   switch (cell.plant) {
-    case null: return false;
+    case null:
+      return false;
     case PlantType.Circle:
       for (const rowOffset of [-1, 1]) {
         for (const colOffset of [-1, 1]) {
-          gridPointsToCheck.push({ row: cell.row + rowOffset, col: cell.col + colOffset });
+          gridPointsToCheck.push({
+            row: cell.row + rowOffset,
+            col: cell.col + colOffset,
+          });
         }
       }
       break;
@@ -336,7 +349,10 @@ function plantHasRoomToGrow(cell: Cell): boolean {
       for (const rowOffset of [-1, 0, 1]) {
         for (const colOffset of [-1, 0, 1]) {
           if ((rowOffset == 0) != (colOffset == 0)) {
-            gridPointsToCheck.push({ row: cell.row + rowOffset, col: cell.col + colOffset });
+            gridPointsToCheck.push({
+              row: cell.row + rowOffset,
+              col: cell.col + colOffset,
+            });
           }
         }
       }
@@ -345,12 +361,16 @@ function plantHasRoomToGrow(cell: Cell): boolean {
       for (const rowOffset of [-1, 0, 1]) {
         for (const colOffset of [-1, 0, 1]) {
           if (rowOffset != 0 || colOffset != 0) {
-            gridPointsToCheck.push({ row: cell.row + rowOffset, col: cell.col + colOffset });
+            gridPointsToCheck.push({
+              row: cell.row + rowOffset,
+              col: cell.col + colOffset,
+            });
           }
         }
       }
       break;
-    default: return false;
+    default:
+      return false;
   }
   for (const gridPoint of gridPointsToCheck) {
     const otherCell = getCell(gridPoint.row, gridPoint.col);
@@ -363,9 +383,12 @@ function plantHasRoomToGrow(cell: Cell): boolean {
 
 function plantHasResourcesToGrow(cell: Cell): boolean {
   switch (cell.growth) {
-    case 1: return cell.sun >= 50 && cell.water >= 50;
-    case 2: return cell.sun >= 75 && cell.water >= 75;
-    default: return false;
+    case 1:
+      return cell.sun >= 50 && cell.water >= 50;
+    case 2:
+      return cell.sun >= 75 && cell.water >= 75;
+    default:
+      return false;
   }
 }
 
