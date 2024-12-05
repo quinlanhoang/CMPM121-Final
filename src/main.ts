@@ -3,9 +3,12 @@ import "./style.css";
 // dom elements
 const canvas = document.getElementById("game-grid") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
+const dayCounterDisplay = document.getElementById("day-counter") as HTMLElement;
 const typeDisplay = document.getElementById("plant-type") as HTMLElement;
+const growthLevelDisplay = document.getElementById("plant-growth-level") as HTMLElement;
 const waterDisplay = document.getElementById("plant-water") as HTMLElement;
 const sunDisplay = document.getElementById("plant-sun") as HTMLElement;
+const canGrowDisplay = document.getElementById("plant-can-grow") as HTMLElement;
 const nextDayButton = document.getElementById("next-day-button") as HTMLElement;
 const sowButton = document.getElementById("sow-button") as HTMLElement;
 const reapButton = document.getElementById("reap-button") as HTMLElement;
@@ -47,6 +50,7 @@ let CELL_PADDING = 0;
 let GRID_PADDING = 0;
 const player: GridPoint = { row: 0, col: 0 }; // player’s current position in the grid
 let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
+let day = 1;
 
 const inventory: { [key in PlantType]: number } = {
   [PlantType.Circle]: 0,
@@ -389,8 +393,16 @@ function growPlants() {
 
 function updatePlantSummary(cell: Cell) {
   typeDisplay.textContent = cell.plant;
+  growthLevelDisplay.textContent = `${cell.growth}`;
   waterDisplay.textContent = `${cell.water}`;
   sunDisplay.textContent = `${cell.sun}`;
+  if (plantCanGrow(cell)) {
+    canGrowDisplay.textContent = "yes";
+    canGrowDisplay.className = "success";
+  } else {
+    canGrowDisplay.textContent = "no";
+    canGrowDisplay.className = "fail";
+  }
 }
 
 // moves the player and updates ui details of the cell
@@ -408,6 +420,7 @@ function movePlayer(cols: number, rows: number) {
 // simulates the next day by adding water and sunlight to plants
 function nextDay() {
   growPlants(); // intentionally done *before* updating cell resources for next turn
+  day++;
   grid.forEach((row) =>
     row.forEach((cell) => {
       cell.water = Math.min(
@@ -434,10 +447,15 @@ function handleGridClicked(x: number, y: number) {
   }
 }
 
+function updateDayCounter() {
+  dayCounterDisplay.innerHTML = `Day ${day}`;
+}
+
 function updateDisplay() {
   updateInventoryUI();
   const cell = getCell(player.row, player.col);
   if (cell) {
+    updateDayCounter();
     updatePlantSummary(cell);
     updatePlantHelp(cell);
   }

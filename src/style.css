@@ -92,3 +92,17 @@ canvas {
   background-color: #3e2300;
   border: 1px solid black;
 }
+
+#day-counter {
+  font-weight: bold;
+}
+
+.success {
+  font-weight: bold;
+  color: green;
+}
+
+.fail {
+  font-weight: bold;
+  color: red;
+}
