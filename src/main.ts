@@ -417,10 +417,7 @@ function movePlayer(cols: number, rows: number) {
   updateDisplay();
 }
 
-// simulates the next day by adding water and sunlight to plants
-function nextDay() {
-  growPlants(); // intentionally done *before* updating cell resources for next turn
-  day++;
+function distributeNaturalResources() {
   grid.forEach((row) =>
     row.forEach((cell) => {
       cell.water = Math.min(
@@ -430,6 +427,13 @@ function nextDay() {
       cell.sun = Math.min(Math.floor(Math.random() * 100), 100); // random sunlight
     })
   );
+}
+
+// simulates the next day by adding water and sunlight to plants
+function nextDay() {
+  growPlants(); // intentionally done *before* updating cell resources for next turn
+  day++;
+  distributeNaturalResources();
   updateDisplay();
 }
 
@@ -483,6 +487,7 @@ function initializeGame() {
   initializeGrid();
   recalculateDimensions();
   initializeEvents();
+  distributeNaturalResources();
   updateDisplay();
 }
 
