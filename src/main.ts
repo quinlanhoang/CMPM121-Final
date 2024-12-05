@@ -456,13 +456,7 @@ function updateDayCounter() {
 }
 
 function gameWon(): boolean {
-  let total = 0;
-  for (const row of grid) {
-    for (const cell of row) {
-      total += cell.growth;
-    }
-  }
-  return total >= 100;
+  return inventory.Circle + inventory.Square + inventory.Triangle >= 100;
 }
 
 function updateDisplay() {
@@ -475,7 +469,7 @@ function updateDisplay() {
   }
   draw();
   if (gameWon()) {
-    alert("You win! The total combined growth level of your garden is at least 200.");
+    alert("You win! You have prepared the requested shipment of 100 crops.");
     location.reload();
   }
 }
