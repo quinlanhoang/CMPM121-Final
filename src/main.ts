@@ -470,6 +470,10 @@ function eraseGame(slot?: number) {
   }
 }
 
+function commitState() {
+  saveGame(-1);
+}
+
 /*
  * UI
  */
@@ -833,6 +837,7 @@ function sowPlant() {
   };
   state.inventory[state.selectedInventoryPlant]--;
   updateDisplay();
+  commitState();
 }
 
 // reaps the plant from the current cell and adds it to the inventory
@@ -842,6 +847,7 @@ function reapPlant() {
     state.inventory[cell.plant.type] += cell.plant.growth;
     cell.plant = null;
     updateDisplay();
+    commitState();
   }
 }
 
@@ -896,8 +902,9 @@ function movePlayer(cols: number, rows: number) {
   if (cell) {
     state.player.col = newCol;
     state.player.row = newRow;
+    updateDisplay();
+    commitState();
   }
-  updateDisplay();
 }
 
 function distributeNaturalResources() {
@@ -919,6 +926,7 @@ function nextDay() {
   state.day++;
   distributeNaturalResources();
   updateDisplay();
+  commitState();
 }
 
 function gameWon(): boolean {
