@@ -658,9 +658,9 @@ function updateDayCounter() {
 
 function updateDisplay() {
   updateInventoryUI();
+  updateDayCounter();
   const cell = getCell(state.player.row, state.player.col);
   if (cell) {
-    updateDayCounter();
     updatePlantSummary(cell);
     updatePlantHelp(cell);
   }
