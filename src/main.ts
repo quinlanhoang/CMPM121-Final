@@ -116,6 +116,14 @@ function u8ArraySetFromHex(array: Uint8Array, hex: string) {
   }
 }
 
+function u8ArrayDuplicate(array: Uint8Array) {
+  const copy = new Uint8Array(array.length);
+  for (let i = 0; i < array.length; i++) {
+    copy[i] = array[i];
+  }
+  return copy;
+}
+
 /*
  * DOM elements
  */
@@ -138,6 +146,8 @@ const saveButton = document.getElementById("save-button")!;
 const loadButton = document.getElementById("load-button")!;
 const eraseSaveButton = document.getElementById("erase-save-button")!;
 const newGameButton = document.getElementById("new-game-button")!;
+const undoButton = document.getElementById("undo-button")!;
+const redoButton = document.getElementById("redo-button")!;
 const saveLoadStatus = document.getElementById("save-load-status")!;
 
 /*
@@ -183,6 +193,7 @@ interface Cell extends GridPoint, PlantGrowthResources {
 
 const ROWS = 10;
 const COLS = 12;
+const MEMORY_SIZE = 0x170;
 
 // Pseudoconstants (will hardly ever change / changes should only affect presentation, not logic)
 let CELL_SIZE = 0;
@@ -232,7 +243,8 @@ const plantTypesByNumber: (PlantType | null)[] = [
 // but that's because JavaScript isn't designed
 // for guaranteeing data continuity.
 // It would be much more straightforward in a language like C.
-const memory = new Uint8Array(0x170); // 368-byte address space
+const undoStack = [new Uint8Array(MEMORY_SIZE)]; // 368-byte address space
+const redoStack: Uint8Array[] = [];
 
 // The ugliness of it all will be fully contained
 // within the definition of this variable,
@@ -254,14 +266,14 @@ const state: {
   },
   player: {
     get row() {
-      return u8ArrayGetNumber(memory, {
+      return u8ArrayGetNumber(lastMemory(), {
         offset: 0x0000,
         mask: 0b11110000,
         shift: 4,
       });
     },
     set row(value) {
-      u8ArraySetNumber(memory, {
+      u8ArraySetNumber(lastMemory(), {
         offset: 0x0000,
         value,
         mask: 0b11110000,
@@ -269,13 +281,13 @@ const state: {
       });
     },
     get col() {
-      return u8ArrayGetNumber(memory, {
+      return u8ArrayGetNumber(lastMemory(), {
         offset: 0x0000,
         mask: 0b00001111,
       });
     },
     set col(value) {
-      u8ArraySetNumber(memory, {
+      u8ArraySetNumber(lastMemory(), {
         offset: 0x0000,
         value,
         mask: 0b00001111,
@@ -283,57 +295,57 @@ const state: {
     },
   },
   get selectedInventoryPlant() {
-    return u8ArrayGetEnum(memory, plantTypesByNumber, {
+    return u8ArrayGetEnum(lastMemory(), plantTypesByNumber, {
       offset: 0x0001,
     });
   },
   set selectedInventoryPlant(value) {
-    u8ArraySetEnum(memory, plantTypesByNumber, {
+    u8ArraySetEnum(lastMemory(), plantTypesByNumber, {
       offset: 0x0001,
       value,
     });
   },
   get day() {
-    return u8ArrayGetNumber(memory, {
+    return u8ArrayGetNumber(lastMemory(), {
       offset: 0x0002,
     });
   },
   set day(value) {
-    u8ArraySetNumber(memory, {
+    u8ArraySetNumber(lastMemory(), {
       offset: 0x0002,
       value,
     });
   },
   inventory: {
     get Circle() {
-      return u8ArrayGetNumber(memory, {
+      return u8ArrayGetNumber(lastMemory(), {
         offset: 0x0003,
       });
     },
     set Circle(value) {
-      u8ArraySetNumber(memory, {
+      u8ArraySetNumber(lastMemory(), {
         offset: 0x0003,
         value,
       });
     },
     get Triangle() {
-      return u8ArrayGetNumber(memory, {
+      return u8ArrayGetNumber(lastMemory(), {
         offset: 0x0004,
       });
     },
     set Triangle(value) {
-      u8ArraySetNumber(memory, {
+      u8ArraySetNumber(lastMemory(), {
         offset: 0x0004,
         value,
       });
     },
     get Square() {
-      return u8ArrayGetNumber(memory, {
+      return u8ArrayGetNumber(lastMemory(), {
         offset: 0x0005,
       });
     },
     set Square(value) {
-      u8ArraySetNumber(memory, {
+      u8ArraySetNumber(lastMemory(), {
         offset: 0x0005,
         value,
       });
@@ -345,30 +357,30 @@ const state: {
       row,
       col,
       get sun() {
-        return u8ArrayGetNumber(memory, {
+        return u8ArrayGetNumber(lastMemory(), {
           offset,
         });
       },
       set sun(value) {
-        u8ArraySetNumber(memory, {
+        u8ArraySetNumber(lastMemory(), {
           offset,
           value,
         });
       },
       get water() {
-        return u8ArrayGetNumber(memory, {
+        return u8ArrayGetNumber(lastMemory(), {
           offset: offset + 0x0001,
         });
       },
       set water(value) {
-        u8ArraySetNumber(memory, {
+        u8ArraySetNumber(lastMemory(), {
           offset: offset + 0x0001,
           value,
         });
       },
       get plant() {
         if (
-          u8ArrayGetNumber(memory, {
+          u8ArrayGetNumber(lastMemory(), {
             offset: offset + 0x0002,
             mask: 0b11110000,
             shift: 4,
@@ -378,14 +390,14 @@ const state: {
         } else {
           const plant: Plant = {
             get type() {
-              return u8ArrayGetEnum(memory, plantTypesByNumber, {
+              return u8ArrayGetEnum(lastMemory(), plantTypesByNumber, {
                 offset: offset + 0x0002,
                 mask: 0b11110000,
                 shift: 4,
               })!;
             },
             set type(value) {
-              u8ArraySetEnum(memory, plantTypesByNumber, {
+              u8ArraySetEnum(lastMemory(), plantTypesByNumber, {
                 offset: offset + 0x0002,
                 value,
                 mask: 0b00001111,
@@ -393,13 +405,13 @@ const state: {
               });
             },
             get growth() {
-              return u8ArrayGetNumber(memory, {
+              return u8ArrayGetNumber(lastMemory(), {
                 offset: offset + 0x0002,
                 mask: 0b00001111,
               }) as PlantGrowth;
             },
             set growth(value) {
-              u8ArraySetNumber(memory, {
+              u8ArraySetNumber(lastMemory(), {
                 offset: offset + 0x0002,
                 value,
                 mask: 0b00001111,
@@ -411,19 +423,19 @@ const state: {
       },
       set plant(value) {
         if (value) {
-          u8ArraySetEnum(memory, plantTypesByNumber, {
+          u8ArraySetEnum(lastMemory(), plantTypesByNumber, {
             offset: offset + 0x02,
             value: value.type,
             mask: 0b11110000,
             shift: 4,
           });
-          u8ArraySetNumber(memory, {
+          u8ArraySetNumber(lastMemory(), {
             offset: offset + 0x02,
             value: value.growth,
             mask: 0b00001111,
           });
         } else {
-          u8ArraySetNumber(memory, {
+          u8ArraySetNumber(lastMemory(), {
             offset: offset + 0x02,
             value: 0,
           });
@@ -434,11 +446,69 @@ const state: {
   },
 };
 
+function lastMemory() {
+  return undoStack[undoStack.length - 1];
+}
+
+function beginUndoStep() {
+  redoStack.length = 0;
+  undoStack.push(u8ArrayDuplicate(lastMemory()));
+}
+
+function undo(): boolean {
+  if (undoStack.length > 1) {
+    redoStack.push(undoStack[undoStack.length - 1]);
+    undoStack.pop();
+    updateDisplay();
+    reportUndoSuccess();
+    return true;
+  } else {
+    reportUndoFail();
+    return false;
+  }
+}
+
+function redo(): boolean {
+  if (redoStack.length > 0) {
+    undoStack.push(redoStack[redoStack.length - 1]);
+    redoStack.pop();
+    updateDisplay();
+    reportRedoSuccess();
+    return true;
+  } else {
+    reportRedoFail();
+    return false;
+  }
+}
+
+function serializeStateStacks() {
+  return JSON.stringify({
+    redoStack: redoStack.map(u8ArrayToHex),
+    undoStack: undoStack.map(u8ArrayToHex)
+  });
+}
+
+function deserializeStateStacks(serialized: string) {
+  const data = JSON.parse(serialized);
+  for (const transaction of [
+    {from: data.undoStack, to: undoStack},
+    {from: data.redoStack, to: redoStack},
+  ]) {
+    transaction.to.length = 0;
+    for (const hex of transaction.from) {
+      const array = new Uint8Array(MEMORY_SIZE);
+      u8ArraySetFromHex(array, hex);
+      transaction.to.push(array);
+    }
+  }
+  updateDisplay();
+}
+
 function saveGame(slot?: number): boolean {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
-  const hexString = u8ArrayToHex(memory);
-  localStorage.setItem(saveKey, hexString);
-  if (localStorage.getItem(saveKey) === hexString) {
+  const saveData = serializeStateStacks();
+  localStorage.setItem(saveKey, saveData);
+  if (localStorage.getItem(saveKey) === saveData) {
     reportSaveSuccess();
     return true;
   } else {
@@ -449,10 +519,9 @@ function saveGame(slot?: number): boolean {
 
 function loadGame(slot?: number): boolean {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
-  const hexString = localStorage.getItem(saveKey);
-  if (hexString) {
-    u8ArraySetFromHex(memory, hexString);
-    updateDisplay();
+  const saveData = localStorage.getItem(saveKey);
+  if (saveData) {
+    deserializeStateStacks(saveData);
     reportLoadSuccess();
     return true;
   } else {
@@ -808,6 +877,26 @@ function reportEraseSuccess() {
   saveLoadStatus.innerHTML = "Game erased.";
 }
 
+function reportUndoSuccess() {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = "Reverted to previous game state.";
+}
+
+function reportUndoFail() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML = "This is the first game state.";
+}
+
+function reportRedoSuccess() {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = "Restored future game state.";
+}
+
+function reportRedoFail() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML = "This is the last game state.";
+}
+
 /*
  * Application logic
  */
@@ -853,6 +942,7 @@ function sowPlant() {
   ) {
     return;
   }
+  beginUndoStep();
   cell.plant = {
     type: state.selectedInventoryPlant,
     growth: 1,
@@ -866,6 +956,7 @@ function sowPlant() {
 function reapPlant() {
   const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant !== null) {
+    beginUndoStep();
     state.inventory[cell.plant.type] += cell.plant.growth;
     cell.plant = null;
     updateDisplay();
@@ -922,6 +1013,7 @@ function movePlayer(cols: number, rows: number) {
   const newRow = state.player.row + rows;
   const cell = getCell(newRow, newCol);
   if (cell) {
+    beginUndoStep();
     state.player.col = newCol;
     state.player.row = newRow;
     updateDisplay();
@@ -944,6 +1036,7 @@ function distributeNaturalResources() {
 
 // simulates the next day by adding water and sunlight to plants
 function nextDay() {
+  beginUndoStep();
   growPlants(); // intentionally done *before* updating cell resources for next turn
   state.day++;
   distributeNaturalResources();
@@ -990,6 +1083,8 @@ function initializeEvents() {
   loadButton.addEventListener("click", () => loadGame());
   eraseSaveButton.addEventListener("click", askToEraseGame);
   newGameButton.addEventListener("click", initializeGame);
+  undoButton.addEventListener("click", undo);
+  redoButton.addEventListener("click", redo);
   canvas.addEventListener(
     "click",
     (e) => handleGridClicked(e.offsetX, e.offsetY),
@@ -1016,6 +1111,11 @@ function initializeSaveLoadStatus() {
   saveLoadStatus.innerHTML = "Playing on a new game (not yet saved or loaded).";
 }
 
+function resetStateStacks() {
+  undoStack.length = 1;
+  redoStack.length = 0;
+}
+
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
@@ -1023,6 +1123,7 @@ function initializeGame() {
   initializeDayCount();
   initializePlayerPosition();
   initializeSaveLoadStatus();
+  resetStateStacks();
   updateDisplay();
 }
 
