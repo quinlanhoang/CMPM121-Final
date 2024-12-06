@@ -149,6 +149,7 @@ const newGameButton = document.getElementById("new-game-button")!;
 const undoButton = document.getElementById("undo-button")!;
 const redoButton = document.getElementById("redo-button")!;
 const saveLoadStatus = document.getElementById("save-load-status")!;
+const gameStatus = document.getElementById("game-status")!;
 
 /*
  * Types
@@ -844,26 +845,50 @@ function updateDisplay() {
   draw();
 }
 
-function reportLoadFail() {
+function saveLoadNeutralMessage(what: string) {
+  saveLoadStatus.className = "";
+  saveLoadStatus.innerHTML = what;
+}
+
+function saveLoadFailMessage(what: string) {
   saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML =
-    "There does not seem to be a saved game in this slot.";
+  saveLoadStatus.innerHTML = what;
+}
+
+function saveLoadSuccessMessage(what: string) {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = what;
+}
+
+function neutralMessage(what: string) {
+  gameStatus.className = "";
+  gameStatus.innerHTML = what;
+}
+
+function successMessage(what: string) {
+  gameStatus.className = "success";
+  gameStatus.innerHTML = what;
+}
+
+function failMessage(what: string) {
+  gameStatus.className = "fail";
+  gameStatus.innerHTML = what;
+}
+
+function reportLoadFail() {
+  saveLoadFailMessage("There does not seem to be a saved game in this slot.");
 }
 
 function reportLoadSuccess() {
-  saveLoadStatus.className = "success";
-  saveLoadStatus.innerHTML = "Game loaded.";
+  saveLoadSuccessMessage("Game loaded.");
 }
 
 function reportSaveFail() {
-  saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML =
-    "Could not save the game. Check if the page has localStorage permission.";
+  saveLoadFailMessage("Could not save the game. Check if the page has localStorage permission.");
 }
 
 function reportSaveSuccess() {
-  saveLoadStatus.className = "success";
-  saveLoadStatus.innerHTML = "Game saved.";
+  saveLoadSuccessMessage("Game saved.");
 }
 
 function askToEraseGame() {
@@ -873,39 +898,105 @@ function askToEraseGame() {
 }
 
 function reportEraseFail() {
-  saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML =
-    "Could not erase the saved game. Check if the page has localStorage permission.";
+  saveLoadFailMessage("Could not erase the saved game. Check if the page has localStorage permission.");
 }
 
 function reportEraseRedundant() {
-  saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML = "There is no saved game here to erase.";
+  saveLoadFailMessage("There is no saved game here to erase.");
 }
 
 function reportEraseSuccess() {
-  saveLoadStatus.className = "success";
-  saveLoadStatus.innerHTML = "Game erased.";
+  saveLoadSuccessMessage("Game erased.");
 }
 
 function reportUndoSuccess() {
-  saveLoadStatus.className = "success";
-  saveLoadStatus.innerHTML = "Reverted to previous game state.";
+  successMessage("Reverted to previous game state.");
 }
 
 function reportUndoFail() {
-  saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML = "This is the first game state.";
+  failMessage("This is the first game state.");
 }
 
 function reportRedoSuccess() {
-  saveLoadStatus.className = "success";
-  saveLoadStatus.innerHTML = "Restored future game state.";
+  successMessage("Restored future game state.");
 }
 
 function reportRedoFail() {
-  saveLoadStatus.className = "fail";
-  saveLoadStatus.innerHTML = "This is the last game state.";
+  failMessage("This is the last game state.");
+}
+
+function showTutorialMessage() {
+  neutralMessage(
+    "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
+    "To sow a seed, click on it in your inventory, and then click \"Sow.\"<br />" +
+    "To reap a crop, move to the same grid cell as it, and click \"Reap.\"<br />" +
+    "You have been asked to prepare a shipment of 100 crops.<br />" +
+    "Your goal is to gather that many crops into your inventory to get them ready to ship."
+  );
+}
+
+function showMoveFail() {
+  failMessage("Can't move there.");
+}
+
+function showMoveSuccess() {
+  successMessage(`Moved to cell ${state.player.row},${state.player.col}.`);
+}
+
+function showReapFail() {
+  failMessage("No crop on this cell.");
+}
+
+function showReapSuccess() {
+  const cell = getCell(state.player.row, state.player.col);
+  if (cell && cell.plant) {
+    successMessage(`Reaped lv${cell.plant.growth} ${cell.plant.type} plant.`);
+  } else {
+    failMessage(
+      "Reaped some plant somewhere somehow. " +
+      "The fact that we don't know what kind of plant was reaped is a bug."
+    );
+  }
+}
+
+function showSowFail() {
+  const cell = getCell(state.player.row, state.player.col);
+  if (!cell) {
+    failMessage(
+      "Can't sow while out of bounds. " +
+      "You should not even be out of bounds. This is a bug."
+    );
+  } else if (!state.selectedInventoryPlant) {
+    failMessage(
+      "You haven't selected anything to sow. " +
+      "(Hint: click on a seed type in your inventory.)"
+    );
+  } else if (cell.plant) {
+    failMessage(
+      "There is already a plant here. " +
+      "(Hint: try reaping it instead.)"
+    );
+  } else if (state.inventory[state.selectedInventoryPlant] <= 0) {
+    failMessage(`You have no ${state.selectedInventoryPlant} seeds at this time.`);
+  } else {
+    failMessage(
+      "You should have been able to sow. " +
+      "The fact that you could not is a bug, " +
+      "or this fail message function is outdated."
+    );
+  }
+}
+
+function showSowSuccess() {
+  successMessage(`Planted a ${state.selectedInventoryPlant} plant.`);
+}
+
+function reportNewGame() {
+  saveLoadNeutralMessage("Playing on a new game (not yet saved or loaded).");
+}
+
+function reportNextDay() {
+  successMessage("Advanced to the next day.");
 }
 
 /*
@@ -951,27 +1042,32 @@ function sowPlant() {
     cell.plant !== null || // cell not empty
     state.inventory[state.selectedInventoryPlant] <= 0 // no seeds available
   ) {
-    return;
+    showSowFail();
+  } else {
+    showSowSuccess();
+    beginUndoStep();
+    cell.plant = {
+      type: state.selectedInventoryPlant,
+      growth: 1,
+    };
+    state.inventory[state.selectedInventoryPlant]--;
+    updateDisplay();
+    commitState();
   }
-  beginUndoStep();
-  cell.plant = {
-    type: state.selectedInventoryPlant,
-    growth: 1,
-  };
-  state.inventory[state.selectedInventoryPlant]--;
-  updateDisplay();
-  commitState();
 }
 
 // reaps the plant from the current cell and adds it to the inventory
 function reapPlant() {
   const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant !== null) {
+    showReapSuccess();
     beginUndoStep();
     state.inventory[cell.plant.type] += cell.plant.growth;
     cell.plant = null;
     updateDisplay();
     commitState();
+  } else {
+    showReapFail();
   }
 }
 
@@ -983,8 +1079,8 @@ function plantHasRoomToGrow(cell: Cell): boolean {
 }
 
 function plantHasResourcesToGrow(cell: Cell): boolean {
-  return (!!cell.plant &&
-    cell.plant.growth in plantGrowthResourceRequirements) &&
+  return !!cell.plant &&
+    cell.plant.growth in plantGrowthResourceRequirements &&
     cell.sun >= plantGrowthResourceRequirements[cell.plant.growth].sun &&
     cell.water >= plantGrowthResourceRequirements[cell.plant.growth].water;
 }
@@ -1028,7 +1124,10 @@ function movePlayer(cols: number, rows: number) {
     state.player.col = newCol;
     state.player.row = newRow;
     updateDisplay();
+    showMoveSuccess();
     commitState();
+  } else {
+    showMoveFail();
   }
 }
 
@@ -1053,6 +1152,7 @@ function nextDay() {
   distributeNaturalResources();
   updateDisplay();
   commitState();
+  reportNextDay();
 }
 
 function gameWon(): boolean {
@@ -1117,11 +1217,6 @@ function initializePlayerPosition() {
   state.player.col = 0;
 }
 
-function initializeSaveLoadStatus() {
-  saveLoadStatus.className = "";
-  saveLoadStatus.innerHTML = "Playing on a new game (not yet saved or loaded).";
-}
-
 function resetStateStacks() {
   undoStack.length = 1;
   redoStack.length = 0;
@@ -1133,9 +1228,10 @@ function initializeGame() {
   grantInitialSeeds();
   initializeDayCount();
   initializePlayerPosition();
-  initializeSaveLoadStatus();
   resetStateStacks();
   updateDisplay();
+  reportNewGame();
+  showTutorialMessage();
 }
 
 function initializeApp() {

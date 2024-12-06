@@ -9,7 +9,7 @@ body {
 
 header {
   text-align: center;
-  background-color: #2e4b06;
+  background-color: #102008;
   color: white;
   padding: 15px;
   font-size: 24px;
@@ -120,4 +120,9 @@ summary {
 summary:hover {
   cursor: pointer;
   text-decoration: none;
+}
+
+header {
+  height: 12em;
+  font-size: 100%;
 }
