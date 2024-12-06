@@ -33,10 +33,10 @@ function randomItem<T>(from: T[]): T {
 }
 
 function u8ArrayGetNumber(array: Uint8Array, options: {
-  offset: number,
-  width?: number,
-  mask?: number,
-  shift?: number,
+  offset: number;
+  width?: number;
+  mask?: number;
+  shift?: number;
 }) {
   let result = 0;
   if (options.width) {
@@ -56,11 +56,11 @@ function u8ArrayGetNumber(array: Uint8Array, options: {
 }
 
 function u8ArraySetNumber(array: Uint8Array, options: {
-  offset: number,
-  value: number,
-  width?: number,
-  mask?: number,
-  shift?: number,
+  offset: number;
+  value: number;
+  width?: number;
+  mask?: number;
+  shift?: number;
 }) {
   let value = options.value;
   if (options.width) {
@@ -80,22 +80,22 @@ function u8ArraySetNumber(array: Uint8Array, options: {
 }
 
 function u8ArrayGetEnum<T>(array: Uint8Array, values: T[], options: {
-  offset: number,
-  width?: number,
-  mask?: number,
-  shift?: number,
+  offset: number;
+  width?: number;
+  mask?: number;
+  shift?: number;
 }) {
   return values[u8ArrayGetNumber(array, options)];
 }
 
 function u8ArraySetEnum<T>(array: Uint8Array, values: T[], options: {
-  offset: number,
-  value: T,
-  width?: number,
-  mask?: number,
-  shift?: number,
+  offset: number;
+  value: T;
+  width?: number;
+  mask?: number;
+  shift?: number;
 }) {
-  u8ArraySetNumber(array, {...options, value: values.indexOf(options.value)});
+  u8ArraySetNumber(array, { ...options, value: values.indexOf(options.value) });
 }
 
 /*
@@ -222,111 +222,158 @@ const state: {
   grid(row: number, col: number): Cell;
 } = {
   player: {
-    get row() { return u8ArrayGetNumber(memory, {
-      offset: 0x0000,
-      mask: 0b11110000,
-      shift: 4,
-    }); },
-    set row(value) { u8ArraySetNumber(memory, {
-      offset: 0x0000,
-      value,
-      mask: 0b11110000,
-      shift: 4,
-    }); },
-    get col() { return u8ArrayGetNumber(memory, {
-      offset: 0x0000,
-      mask: 0b00001111,
-    }); },
-    set col(value) { u8ArraySetNumber(memory, {
-      offset: 0x0000,
-      value,
-      mask: 0b00001111,
-    }); },
+    get row() {
+      return u8ArrayGetNumber(memory, {
+        offset: 0x0000,
+        mask: 0b11110000,
+        shift: 4,
+      });
+    },
+    set row(value) {
+      u8ArraySetNumber(memory, {
+        offset: 0x0000,
+        value,
+        mask: 0b11110000,
+        shift: 4,
+      });
+    },
+    get col() {
+      return u8ArrayGetNumber(memory, {
+        offset: 0x0000,
+        mask: 0b00001111,
+      });
+    },
+    set col(value) {
+      u8ArraySetNumber(memory, {
+        offset: 0x0000,
+        value,
+        mask: 0b00001111,
+      });
+    },
   },
-  get selectedInventoryPlant() { return u8ArrayGetEnum(memory, plantTypesByNumber, {
-    offset: 0x0001,
-  }); },
-  set selectedInventoryPlant(value) { u8ArraySetEnum(memory, plantTypesByNumber, {
-    offset: 0x0001,
-    value,
-  }); },
-  get day() { return u8ArrayGetNumber(memory, {
-    offset: 0x0002,
-  }); },
-  set day(value) { u8ArraySetNumber(memory, {
-    offset: 0x0002,
-    value,
-  }); },
+  get selectedInventoryPlant() {
+    return u8ArrayGetEnum(memory, plantTypesByNumber, {
+      offset: 0x0001,
+    });
+  },
+  set selectedInventoryPlant(value) {
+    u8ArraySetEnum(memory, plantTypesByNumber, {
+      offset: 0x0001,
+      value,
+    });
+  },
+  get day() {
+    return u8ArrayGetNumber(memory, {
+      offset: 0x0002,
+    });
+  },
+  set day(value) {
+    u8ArraySetNumber(memory, {
+      offset: 0x0002,
+      value,
+    });
+  },
   inventory: {
-    get Circle() { return u8ArrayGetNumber(memory, {
-      offset: 0x0003,
-    }); },
-    set Circle(value) { u8ArraySetNumber(memory, {
-      offset: 0x0003,
-      value,
-    }); },
-    get Triangle() { return u8ArrayGetNumber(memory, {
-      offset: 0x0004,
-    }); },
-    set Triangle(value) { u8ArraySetNumber(memory, {
-      offset: 0x0004,
-      value,
-    }); },
-    get Square() { return u8ArrayGetNumber(memory, {
-      offset: 0x0005,
-    }); },
-    set Square(value) { u8ArraySetNumber(memory, {
-      offset: 0x0005,
-      value,
-    }); },
+    get Circle() {
+      return u8ArrayGetNumber(memory, {
+        offset: 0x0003,
+      });
+    },
+    set Circle(value) {
+      u8ArraySetNumber(memory, {
+        offset: 0x0003,
+        value,
+      });
+    },
+    get Triangle() {
+      return u8ArrayGetNumber(memory, {
+        offset: 0x0004,
+      });
+    },
+    set Triangle(value) {
+      u8ArraySetNumber(memory, {
+        offset: 0x0004,
+        value,
+      });
+    },
+    get Square() {
+      return u8ArrayGetNumber(memory, {
+        offset: 0x0005,
+      });
+    },
+    set Square(value) {
+      u8ArraySetNumber(memory, {
+        offset: 0x0005,
+        value,
+      });
+    },
   },
   grid(row, col) {
-    const offset = 0x0006 + (row*COLS + col)*0x0003;
+    const offset = 0x0006 + (row * COLS + col) * 0x0003;
     const cell: Cell = {
-      row, col,
-      get sun() { return u8ArrayGetNumber(memory, {
-        offset,
-      }); },
-      set sun(value) { u8ArraySetNumber(memory, {
-        offset,
-        value,
-      }); },
-      get water() { return u8ArrayGetNumber(memory, {
-        offset: offset + 0x0001,
-      }); },
-      set water(value) { u8ArraySetNumber(memory, {
-        offset: offset + 0x0001,
-        value,
-      }); },
+      row,
+      col,
+      get sun() {
+        return u8ArrayGetNumber(memory, {
+          offset,
+        });
+      },
+      set sun(value) {
+        u8ArraySetNumber(memory, {
+          offset,
+          value,
+        });
+      },
+      get water() {
+        return u8ArrayGetNumber(memory, {
+          offset: offset + 0x0001,
+        });
+      },
+      set water(value) {
+        u8ArraySetNumber(memory, {
+          offset: offset + 0x0001,
+          value,
+        });
+      },
       get plant() {
-        if (u8ArrayGetNumber(memory, {
-          offset: offset + 0x0002,
-          mask: 0b11110000,
-          shift: 4,
-        }) == 0) {
+        if (
+          u8ArrayGetNumber(memory, {
+            offset: offset + 0x0002,
+            mask: 0b11110000,
+            shift: 4,
+          }) == 0
+        ) {
           return null;
         } else {
           const plant: Plant = {
-            get type() { return u8ArrayGetEnum(memory, plantTypesByNumber, {
-              offset: offset + 0x0002,
-              mask: 0b11110000,
-              shift: 4,
-            })!; },
-            set type(value) { u8ArraySetEnum(memory, plantTypesByNumber, {
-              offset: offset + 0x0002,
-              value,
-              mask: 0b00001111,
-              shift: 4,
-            }); },
-            get growth() { return u8ArrayGetNumber(memory, {
-              offset: offset + 0x0002,
-              mask: 0b00001111,
-            }) as PlantGrowth; },
-            set growth(value) { u8ArraySetNumber(memory, {
-              offset: offset + 0x0002,
-              value,
-              mask: 0b00001111,
-            }); }
+            get type() {
+              return u8ArrayGetEnum(memory, plantTypesByNumber, {
+                offset: offset + 0x0002,
+                mask: 0b11110000,
+                shift: 4,
+              })!;
+            },
+            set type(value) {
+              u8ArraySetEnum(memory, plantTypesByNumber, {
+                offset: offset + 0x0002,
+                value,
+                mask: 0b00001111,
+                shift: 4,
+              });
+            },
+            get growth() {
+              return u8ArrayGetNumber(memory, {
+                offset: offset + 0x0002,
+                mask: 0b00001111,
+              }) as PlantGrowth;
+            },
+            set growth(value) {
+              u8ArraySetNumber(memory, {
+                offset: offset + 0x0002,
+                value,
+                mask: 0b00001111,
+              });
+            },
           };
           return plant;
         }
@@ -350,7 +397,7 @@ const state: {
             value: 0,
           });
         }
-      }
+      },
     };
     return cell;
   },
@@ -514,7 +561,9 @@ function updateInventoryUI() {
       updateInventoryUI();
     };
 
-    if (plantType === state.selectedInventoryPlant) li.classList.add("selected");
+    if (plantType === state.selectedInventoryPlant) {
+      li.classList.add("selected");
+    }
 
     inventoryContainer.appendChild(li);
   });
@@ -583,7 +632,10 @@ function updatePlantSummary(cell: Cell) {
 function handleGridClicked(x: number, y: number) {
   const gridPoint = canvasPointToGridPoint(x, y);
   if (gridPoint && gridPointsAdjacent(state.player, gridPoint)) {
-    movePlayer(gridPoint.col - state.player.col, gridPoint.row - state.player.row);
+    movePlayer(
+      gridPoint.col - state.player.col,
+      gridPoint.row - state.player.row,
+    );
   }
 }
 
@@ -759,7 +811,8 @@ function nextDay() {
 }
 
 function gameWon(): boolean {
-  return state.inventory.Circle + state.inventory.Square + state.inventory.Triangle >= 100;
+  return state.inventory.Circle + state.inventory.Square +
+      state.inventory.Triangle >= 100;
 }
 
 /*
