@@ -1,59 +1,103 @@
 # Devlog
 
+## Project phase F1
+
+### How we satisfied the software requirements
+
+- **F0.a:** Same as last week.
+- **F0.b:** Same as last week.
+- **F0.c:** Same as last week.
+- **F0.d:** Same as last week.
+- **F0.e:** Same as last week.
+- **F0.f:** Same as last week.
+- **F0.g:** Same as last week.
+- **F1.a:** Data format is array of structures. Great care was taken to ensure
+  the data representation is contiguous in memory, per requirements: we use a
+  Uint8Array, and getters and setters that work with offsets and bitmasks.
+  ![F1.a data structure diagram](./f1_a_diagram.png)
+- **F1.b:** Manual save/load functionality was added, provided via a slot
+  selector input and save/load/erase buttons in a collapsible marked "Save
+  management."
+- **F1.c:** The game autosaves to and autoloads from slot -1, which is not
+  manually accessible, but can effectively be erased with a provided "new game"
+  button.
+- **F1.d:** An undo and redo system was added, implemented by switching from
+  directly storing the memory hex string in localStorage to storing undo and
+  redo stacks there. The undo and redo stacks are then arrays of memory hex
+  strings. To undo is to move the top of the undo stack to the top of the redo
+  stack, and to redo is to move the top of the redo stack to the top of the undo
+  stack. The top of the undo stack is at all times regarded as the current game
+  state, and successfully moving, reaping, sowing, or advancing time creates a
+  new undo step.
+
+### Reflection
+
+> It would be very suspicious if you didn’t need to change anything.
+
+I find this phrasing confusing and a frankly little bit insulting. What exactly
+would be suspicious about it? If the requirements are fulfilled, then they're
+fulfilled, aren't they? It's not as if we can't read ahead and plan our
+project's structure from the very beginning according to changes that will have
+to be made in the far future, if we really want to. I don't see how that would
+in any way be intellectually dishonest.
+
+That being said, we did not do that, so of course there were changes of plans:
+
+- Data representation changed from direct JS objects to proxy objects for an
+  underlying byte array. This was a fairly high-effort change, but was
+  encapsulated with getters and setters so that mostly only a self-contained
+  portion of the code needed to change.
+- Data representation then changed from byte array to array of byte arrays. This
+  was a medium-high-effort change.
+- For the majority of the assignment, we did _not_ "think about giving the
+  player more feedback," because the requirements page _for the project_ did not
+  tell us to do that. I would have appreciated if the project requirements were
+  on the project requirements page and not on the devlog requirements page. When
+  I go to the devlog requirements page, I expect the fact that I've fulfilled
+  all requirements listed on the project requirements page means I'm done
+  working on this portion of the project and am now ready to work on the devlog.
+  I don't want to do a mental context switch into writing the devlog and then
+  have to switch back because the _devlog_ requirements include extra _project_
+  requirements. Anyway: Low-effort changes were made last-minute to give the
+  player more feedback. I could have done more to this end, but I did not,
+  because I felt what I did do was adequate for game legibility purposes despite
+  not requiring much effort. The changes ensure that if you can read, then you
+  can play the game.
+
 ## Project phase F0
 
 ### How we satisfied the software requirements
 
-#### F0.a
-
-The grid is stored as a two-dimensional array of grid cell records, and the
-player marker as a two-dimensional index into that array. The grid is drawn on a
-canvas using arithmetic. To allow the player marker to move within the grid, key
-and mouse events are read. The player marker can be controlled with the
-arrowkeys or by clicking on grid cells adjacent to the player marker.
-
-#### F0.b
-
-We store the current day as a counter and display a button whose click handler
-updates that counter and performs between-day logic. Between-day logic includes
-growing plants that can grow, distributing natural resources (water and
-sunlight) over the grid, and updating the display, in that order.
-
-#### F0.c
-
-The player can reap and sow plants only on the grid cell currently occupied by
-the player marker. If a grid cell is unoccupied and the player has at least one
-seed of the selected type in their inventory, sowing a seed transfers it from
-their inventory to the grid cell as a stage-1 plant. If a grid cell is occupied,
-reaping the plant transfers it from the grid cell to the player's inventory as a
-number of seeds equal to the plant's growth level.
-
-#### F0.d
-
-A grid cell may have at most 100 water and 100 sun. Every day, each cell has a
-random amount of water added to it, and its amount of sun is set randomly. Plant
-growth consumes water, and requires sun, but does not consume sun, since it will
-be overwritten anyway (since sun amount is set, not increased, with each day).
-For now, we are using builtin JS RNG.
-
-#### F0.e
-
-There are circle, triangle, and square plants. Each can have growth level 1, 2,
-or 3.
-
-#### F0.f
-
-Circle plants can only grow if there are no diagonally adjacent plants. Triangle
-plants can only grow if there are no cardinally adjacent plants. Square plants
-can only grow if there are neither diagonally nor cardinally adjacent plants.
-Plants at growth level 1 require 50 water and 50 sun to grow. Plants at growth
-level 2 require 75 water and 75 sun to grow. Plants at growth level 3 do not
-grow further.
-
-#### F0.g
-
-The game is won when the total seeds in the player's inventory meet or exceed
-100 in number.
+- **F0.a:** The grid is stored as a two-dimensional array of grid cell records,
+  and the player marker as a two-dimensional index into that array. The grid is
+  drawn on a canvas using arithmetic. To allow the player marker to move within
+  the grid, key and mouse events are read. The player marker can be controlled
+  with the arrowkeys or by clicking on grid cells adjacent to the player marker.
+- **F0.b:** We store the current day as a counter and display a button whose
+  click handler updates that counter and performs between-day logic. Between-day
+  logic includes growing plants that can grow, distributing natural resources
+  (water and sunlight) over the grid, and updating the display, in that order.
+- **F0.c:** The player can reap and sow plants only on the grid cell currently
+  occupied by the player marker. If a grid cell is unoccupied and the player has
+  at least one seed of the selected type in their inventory, sowing a seed
+  transfers it from their inventory to the grid cell as a stage-1 plant. If a
+  grid cell is occupied, reaping the plant transfers it from the grid cell to
+  the player's inventory as a number of seeds equal to the plant's growth level.
+- **F0.d:** A grid cell may have at most 100 water and 100 sun. Every day, each
+  cell has a random amount of water added to it, and its amount of sun is set
+  randomly. Plant growth consumes water, and requires sun, but does not consume
+  sun, since it will be overwritten anyway (since sun amount is set, not
+  increased, with each day). For now, we are using builtin JS RNG.
+- **F0.e:** There are circle, triangle, and square plants. Each can have growth
+  level 1, 2, or 3.
+- **F0.f:** Circle plants can only grow if there are no diagonally adjacent
+  plants. Triangle plants can only grow if there are no cardinally adjacent
+  plants. Square plants can only grow if there are neither diagonally nor
+  cardinally adjacent plants. Plants at growth level 1 require 50 water and 50
+  sun to grow. Plants at growth level 2 require 75 water and 75 sun to grow.
+  Plants at growth level 3 do not grow further.
+- **F0.g:** The game is won when the total seeds in the player's inventory meet
+  or exceed 100 in number.
 
 ### Reflection
 

@@ -884,7 +884,9 @@ function reportLoadSuccess() {
 }
 
 function reportSaveFail() {
-  saveLoadFailMessage("Could not save the game. Check if the page has localStorage permission.");
+  saveLoadFailMessage(
+    "Could not save the game. Check if the page has localStorage permission.",
+  );
 }
 
 function reportSaveSuccess() {
@@ -898,7 +900,9 @@ function askToEraseGame() {
 }
 
 function reportEraseFail() {
-  saveLoadFailMessage("Could not erase the saved game. Check if the page has localStorage permission.");
+  saveLoadFailMessage(
+    "Could not erase the saved game. Check if the page has localStorage permission.",
+  );
 }
 
 function reportEraseRedundant() {
@@ -928,10 +932,10 @@ function reportRedoFail() {
 function showTutorialMessage() {
   neutralMessage(
     "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
-    "To sow a seed, click on it in your inventory, and then click \"Sow.\"<br />" +
-    "To reap a crop, move to the same grid cell as it, and click \"Reap.\"<br />" +
-    "You have been asked to prepare a shipment of 100 crops.<br />" +
-    "Your goal is to gather that many crops into your inventory to get them ready to ship."
+      'To sow a seed, click on it in your inventory, and then click "Sow."<br />' +
+      'To reap a crop, move to the same grid cell as it, and click "Reap."<br />' +
+      "You have been asked to prepare a shipment of 100 crops.<br />" +
+      "Your goal is to gather that many crops into your inventory to get them ready to ship.",
   );
 }
 
@@ -954,7 +958,7 @@ function showReapSuccess() {
   } else {
     failMessage(
       "Reaped some plant somewhere somehow. " +
-      "The fact that we don't know what kind of plant was reaped is a bug."
+        "The fact that we don't know what kind of plant was reaped is a bug.",
     );
   }
 }
@@ -964,25 +968,27 @@ function showSowFail() {
   if (!cell) {
     failMessage(
       "Can't sow while out of bounds. " +
-      "You should not even be out of bounds. This is a bug."
+        "You should not even be out of bounds. This is a bug.",
     );
   } else if (!state.selectedInventoryPlant) {
     failMessage(
       "You haven't selected anything to sow. " +
-      "(Hint: click on a seed type in your inventory.)"
+        "(Hint: click on a seed type in your inventory.)",
     );
   } else if (cell.plant) {
     failMessage(
       "There is already a plant here. " +
-      "(Hint: try reaping it instead.)"
+        "(Hint: try reaping it instead.)",
     );
   } else if (state.inventory[state.selectedInventoryPlant] <= 0) {
-    failMessage(`You have no ${state.selectedInventoryPlant} seeds at this time.`);
+    failMessage(
+      `You have no ${state.selectedInventoryPlant} seeds at this time.`,
+    );
   } else {
     failMessage(
       "You should have been able to sow. " +
-      "The fact that you could not is a bug, " +
-      "or this fail message function is outdated."
+        "The fact that you could not is a bug, " +
+        "or this fail message function is outdated.",
     );
   }
 }
