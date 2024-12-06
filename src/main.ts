@@ -111,8 +111,8 @@ function u8ArrayToHex(array: Uint8Array): string {
 }
 
 function u8ArraySetFromHex(array: Uint8Array, hex: string) {
-  for (let i = 0; i < hex.length/2; i++) {
-    array[i] = parseInt(hex.slice(2*i, 2*(i + 1)), 0x10);
+  for (let i = 0; i < hex.length / 2; i++) {
+    array[i] = parseInt(hex.slice(2 * i, 2 * (i + 1)), 0x10);
   }
 }
 
@@ -239,7 +239,7 @@ const memory = new Uint8Array(0x170); // 368-byte address space
 // which will use getters and setters
 // to insulate the rest of the code from the pointer arithmetic.
 const state: {
-  saveSlot: number,
+  saveSlot: number;
   player: GridPoint;
   selectedInventoryPlant: PlantType | null;
   day: number;
@@ -1013,8 +1013,7 @@ function initializePlayerPosition() {
 
 function initializeSaveLoadStatus() {
   saveLoadStatus.className = "";
-  saveLoadStatus.innerHTML =
-    "Playing on a new game (not yet saved or loaded).";
+  saveLoadStatus.innerHTML = "Playing on a new game (not yet saved or loaded).";
 }
 
 function initializeGame() {
