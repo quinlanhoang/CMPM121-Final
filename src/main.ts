@@ -433,45 +433,66 @@ const state: {
   },
 };
 
-function saveGame(slot?: number) {
+function saveGame(slot?: number): boolean {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   const hexString = u8ArrayToHex(memory);
   localStorage.setItem(saveKey, hexString);
   if (localStorage.getItem(saveKey) === hexString) {
     reportSaveSuccess();
+    return true;
   } else {
     reportSaveFail();
+    return false;
   }
 }
 
-function loadGame(slot?: number) {
+function loadGame(slot?: number): boolean {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   const hexString = localStorage.getItem(saveKey);
   if (hexString) {
     u8ArraySetFromHex(memory, hexString);
     updateDisplay();
     reportLoadSuccess();
+    return true;
   } else {
-    reportLoadFail();
+    if (!isAutosaveSlot(slot)) {
+      reportLoadFail();
+    }
+    return false;
   }
 }
 
-function eraseGame(slot?: number) {
+function eraseGame(slot?: number): boolean {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   if (localStorage.getItem(saveKey)) {
     localStorage.removeItem(saveKey);
     if (localStorage.getItem(saveKey)) {
       reportEraseFail();
+      return false;
     } else {
       reportEraseSuccess();
+      return true;
     }
   } else {
     reportEraseRedundant();
+    return false;
   }
 }
 
+function isAutosaveSlot(slot?: number): boolean {
+  return !!slot && slot < 0;
+}
+
+function autosave(): boolean {
+  return saveGame(-1);
+}
+
+function loadAutosave(): boolean {
+  return loadGame(-1);
+}
+
 function commitState() {
-  saveGame(-1);
+  autosave();
 }
 
 /*
@@ -993,3 +1014,4 @@ function initializeGame() {
 }
 
 initializeGame();
+loadAutosave();
