@@ -106,3 +106,18 @@ canvas {
   font-weight: bold;
   color: red;
 }
+
+details {
+  margin: 1em 0;
+}
+
+summary {
+  font-weight: bold;
+  text-decoration: underline;
+  color: blue;
+}
+
+summary:hover {
+  cursor: pointer;
+  text-decoration: none;
+}

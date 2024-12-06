@@ -98,6 +98,24 @@ function u8ArraySetEnum<T>(array: Uint8Array, values: T[], options: {
   u8ArraySetNumber(array, { ...options, value: values.indexOf(options.value) });
 }
 
+// JS has the following two functions already, but TS apparently doesn't.
+function u8ArrayToHex(array: Uint8Array): string {
+  let result = "";
+  for (const byte of array) {
+    if (byte < 0x10) {
+      result += "0";
+    }
+    result += byte.toString(0x10);
+  }
+  return result;
+}
+
+function u8ArraySetFromHex(array: Uint8Array, hex: string) {
+  for (let i = 0; i < hex.length/2; i++) {
+    array[i] = parseInt(hex.slice(2*i, 2*(i + 1)), 0x10);
+  }
+}
+
 /*
  * DOM elements
  */
@@ -115,6 +133,11 @@ const sowButton = document.getElementById("sow-button")!;
 const reapButton = document.getElementById("reap-button")!;
 const inventoryContainer = document.getElementById("inventory-container")!;
 const plantHelpToolTip = document.getElementById("plant-help-tool-tip")!;
+const saveSlotInput = document.getElementById("save-slot") as HTMLInputElement;
+const saveButton = document.getElementById("save-button")!;
+const loadButton = document.getElementById("load-button")!;
+const eraseSaveButton = document.getElementById("erase-save-button")!;
+const saveLoadStatus = document.getElementById("save-load-status")!;
 
 /*
  * Types
@@ -215,12 +238,19 @@ const memory = new Uint8Array(0x170); // 368-byte address space
 // which will use getters and setters
 // to insulate the rest of the code from the pointer arithmetic.
 const state: {
+  saveSlot: number,
   player: GridPoint;
   selectedInventoryPlant: PlantType | null;
   day: number;
   inventory: { [key in PlantType]: number };
   grid(row: number, col: number): Cell;
 } = {
+  get saveSlot() {
+    return parseInt(saveSlotInput.value);
+  },
+  set saveSlot(value) {
+    saveSlotInput.value = value.toString();
+  },
   player: {
     get row() {
       return u8ArrayGetNumber(memory, {
@@ -402,6 +432,55 @@ const state: {
     return cell;
   },
 };
+
+function saveGame(slot?: number) {
+  if (slot) {
+    state.saveSlot = slot;
+    updateDisplay();
+  }
+  const saveKey = `saveSlot${state.saveSlot}`;
+  const hexString = u8ArrayToHex(memory);
+  localStorage.setItem(saveKey, hexString);
+  if (localStorage.getItem(saveKey) === hexString) {
+    reportSaveSuccess();
+  } else {
+    reportSaveFail();
+  }
+}
+
+function loadGame(slot?: number) {
+  if (slot) {
+    state.saveSlot = slot;
+    updateDisplay();
+  }
+  const saveKey = `saveSlot${state.saveSlot}`;
+  const hexString = localStorage.getItem(saveKey);
+  if (hexString) {
+    u8ArraySetFromHex(memory, hexString);
+    updateDisplay();
+    reportLoadSuccess();
+  } else {
+    reportLoadFail();
+  }
+}
+
+function eraseGame(slot?: number) {
+  if (slot) {
+    state.saveSlot = slot;
+    updateDisplay();
+  }
+  const saveKey = `saveSlot${state.saveSlot}`;
+  if (localStorage.getItem(saveKey)) {
+    localStorage.removeItem(saveKey);
+    if (localStorage.getItem(saveKey)) {
+      reportEraseFail();
+    } else {
+      reportEraseSuccess();
+    }
+  } else {
+    reportEraseRedundant();
+  }
+}
 
 /*
  * UI
@@ -671,6 +750,50 @@ function updateDisplay() {
   }
 }
 
+function reportLoadFail() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML =
+    "There does not seem to be a saved game in this slot.";
+}
+
+function reportLoadSuccess() {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = "Game loaded.";
+}
+
+function reportSaveFail() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML =
+    "Could not save the game. Check if the page has localStorage permission.";
+}
+
+function reportSaveSuccess() {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = "Game saved.";
+}
+
+function askToEraseGame() {
+  if (confirm(`Really erase save slot ${state.saveSlot}?`)) {
+    eraseGame();
+  }
+}
+
+function reportEraseFail() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML =
+    "Could not erase the saved game. Check if the page has localStorage permission.";
+}
+
+function reportEraseRedundant() {
+  saveLoadStatus.className = "fail";
+  saveLoadStatus.innerHTML = "There is no saved game here to erase.";
+}
+
+function reportEraseSuccess() {
+  saveLoadStatus.className = "success";
+  saveLoadStatus.innerHTML = "Game erased.";
+}
+
 /*
  * Application logic
  */
@@ -845,6 +968,9 @@ function initializeEvents() {
   sowButton.addEventListener("click", sowPlant);
   reapButton.addEventListener("click", reapPlant);
   nextDayButton.addEventListener("click", nextDay);
+  saveButton.addEventListener("click", () => saveGame());
+  loadButton.addEventListener("click", () => loadGame());
+  eraseSaveButton.addEventListener("click", askToEraseGame);
   canvas.addEventListener(
     "click",
     (e) => handleGridClicked(e.offsetX, e.offsetY),
