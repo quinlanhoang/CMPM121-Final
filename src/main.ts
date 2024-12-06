@@ -137,6 +137,7 @@ const saveSlotInput = document.getElementById("save-slot") as HTMLInputElement;
 const saveButton = document.getElementById("save-button")!;
 const loadButton = document.getElementById("load-button")!;
 const eraseSaveButton = document.getElementById("erase-save-button")!;
+const newGameButton = document.getElementById("new-game-button")!;
 const saveLoadStatus = document.getElementById("save-load-status")!;
 
 /*
@@ -988,6 +989,7 @@ function initializeEvents() {
   saveButton.addEventListener("click", () => saveGame());
   loadButton.addEventListener("click", () => loadGame());
   eraseSaveButton.addEventListener("click", askToEraseGame);
+  newGameButton.addEventListener("click", initializeGame);
   canvas.addEventListener(
     "click",
     (e) => handleGridClicked(e.offsetX, e.offsetY),
@@ -1004,14 +1006,31 @@ function initializeDayCount() {
   state.day = 1;
 }
 
+function initializePlayerPosition() {
+  state.player.row = 0;
+  state.player.col = 0;
+}
+
+function initializeSaveLoadStatus() {
+  saveLoadStatus.className = "";
+  saveLoadStatus.innerHTML =
+    "Playing on a new game (not yet saved or loaded).";
+}
+
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
-  initializeEvents();
   grantInitialSeeds();
   initializeDayCount();
+  initializePlayerPosition();
+  initializeSaveLoadStatus();
   updateDisplay();
 }
 
-initializeGame();
-loadAutosave();
+function initializeApp() {
+  initializeEvents();
+  initializeGame();
+  loadAutosave();
+}
+
+initializeApp();
