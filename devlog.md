@@ -114,7 +114,7 @@ Here is how our thinking changed over time:
   think I have a bad habit of overscoping when I'm panicking. You'd think it
   would be the opposite, but it isn't.
 - Mercifully, Quinlan started from scratch and laid the groundwork for a much
-  more appropriately-scoped engine. He implemented a great deal of the F0
-  requirements, and I picked up where he left off and finished it up. I was able
-  to constrain myself to the established implementation and coding style much
-  more effectively with some work already in front of me to build on.
+  more appropriately-scoped engine. They implemented a great deal of the F0
+  requirements, and I picked up where they left off and finished it up. I was
+  able to constrain myself to the established implementation and coding style
+  much more effectively with some work already in front of me to build on.
