@@ -565,6 +565,7 @@ function loadAutosave(): boolean {
 
 function commitState() {
   autosave();
+  detectAndReportWin();
 }
 
 /*
@@ -822,6 +823,16 @@ function updateDayCounter() {
   dayCounterDisplay.innerHTML = `Day ${state.day}`;
 }
 
+function detectAndReportWin() {
+  if (gameWon()) {
+    undo();
+    if (!gameWon()) {
+      alert("You win! You have prepared the requested shipment of 100 crops.");
+    }
+    redo();
+  }
+}
+
 function updateDisplay() {
   updateInventoryUI();
   updateDayCounter();
@@ -831,10 +842,6 @@ function updateDisplay() {
     updatePlantHelp(cell);
   }
   draw();
-  if (gameWon()) {
-    alert("You win! You have prepared the requested shipment of 100 crops.");
-    location.reload();
-  }
 }
 
 function reportLoadFail() {
