@@ -434,11 +434,7 @@ const state: {
 };
 
 function saveGame(slot?: number) {
-  if (slot) {
-    state.saveSlot = slot;
-    updateDisplay();
-  }
-  const saveKey = `saveSlot${state.saveSlot}`;
+  const saveKey = `saveSlot${slot || state.saveSlot}`;
   const hexString = u8ArrayToHex(memory);
   localStorage.setItem(saveKey, hexString);
   if (localStorage.getItem(saveKey) === hexString) {
@@ -449,11 +445,7 @@ function saveGame(slot?: number) {
 }
 
 function loadGame(slot?: number) {
-  if (slot) {
-    state.saveSlot = slot;
-    updateDisplay();
-  }
-  const saveKey = `saveSlot${state.saveSlot}`;
+  const saveKey = `saveSlot${slot || state.saveSlot}`;
   const hexString = localStorage.getItem(saveKey);
   if (hexString) {
     u8ArraySetFromHex(memory, hexString);
@@ -465,11 +457,7 @@ function loadGame(slot?: number) {
 }
 
 function eraseGame(slot?: number) {
-  if (slot) {
-    state.saveSlot = slot;
-    updateDisplay();
-  }
-  const saveKey = `saveSlot${state.saveSlot}`;
+  const saveKey = `saveSlot${slot || state.saveSlot}`;
   if (localStorage.getItem(saveKey)) {
     localStorage.removeItem(saveKey);
     if (localStorage.getItem(saveKey)) {
