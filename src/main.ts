@@ -32,6 +32,72 @@ function randomItem<T>(from: T[]): T {
   return from[Math.floor(Math.random() * from.length)];
 }
 
+function u8ArrayGetNumber(array: Uint8Array, options: {
+  offset: number,
+  width?: number,
+  mask?: number,
+  shift?: number,
+}) {
+  let result = 0;
+  if (options.width) {
+    for (let i = 0; i < options.width; i++) {
+      result <<= 8;
+      result += array[options.offset + i];
+    }
+  } else if (options.mask) {
+    result = array[options.offset] & options.mask;
+    if (options.shift) {
+      result >>= options.shift;
+    }
+  } else {
+    result = array[options.offset];
+  }
+  return result;
+}
+
+function u8ArraySetNumber(array: Uint8Array, options: {
+  offset: number,
+  value: number,
+  width?: number,
+  mask?: number,
+  shift?: number,
+}) {
+  let value = options.value;
+  if (options.width) {
+    for (let i = options.width - 1; i >= 0; i--) {
+      array[options.offset + i] = value & 0xff;
+      value >>= 8;
+    }
+  } else if (options.mask) {
+    array[options.offset] &= ~options.mask;
+    if (options.shift) {
+      value <<= options.shift;
+    }
+    array[options.offset] |= value & options.mask;
+  } else {
+    array[options.offset] = value;
+  }
+}
+
+function u8ArrayGetEnum<T>(array: Uint8Array, values: T[], options: {
+  offset: number,
+  width?: number,
+  mask?: number,
+  shift?: number,
+}) {
+  return values[u8ArrayGetNumber(array, options)];
+}
+
+function u8ArraySetEnum<T>(array: Uint8Array, values: T[], options: {
+  offset: number,
+  value: T,
+  width?: number,
+  mask?: number,
+  shift?: number,
+}) {
+  u8ArraySetNumber(array, {...options, value: values.indexOf(options.value)});
+}
+
 /*
  * DOM elements
  */
@@ -124,21 +190,171 @@ const plantGrowthResourceRequirements: Record<number, PlantGrowthResources> = {
   [2]: { sun: 75, water: 75 },
 };
 
+const plantTypesByNumber: (PlantType | null)[] = [
+  null,
+  PlantType.Circle,
+  PlantType.Triangle,
+  PlantType.Square,
+];
+
 /*
  * Global state
  */
 
-const player: GridPoint = { row: 0, col: 0 }; // player’s current position in the grid
-let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
-let day = 1;
+// This is the only guaranteed way I could find
+// to get a "single contiguous byte array" in JavaScript
+// as required by F1 assignment details.
+// It's going to make things ugly,
+// but that's because JavaScript isn't designed
+// for guaranteeing data continuity.
+// It would be much more straightforward in a language like C.
+const memory = new Uint8Array(0x10000); // 64kb address space
 
-const inventory: { [key in PlantType]: number } = {
-  [PlantType.Circle]: 0,
-  [PlantType.Triangle]: 0,
-  [PlantType.Square]: 0,
+// The ugliness of it all will be fully contained
+// within the definition of this variable,
+// which will use getters and setters
+// to insulate the rest of the code from the pointer arithmetic.
+const state: {
+  player: GridPoint;
+  selectedInventoryPlant: PlantType | null;
+  day: number;
+  inventory: { [key in PlantType]: number };
+  grid(row: number, col: number): Cell;
+} = {
+  player: {
+    get row() { return u8ArrayGetNumber(memory, {
+      offset: 0x0000,
+      mask: 0b11110000,
+      shift: 4,
+    }); },
+    set row(value) { u8ArraySetNumber(memory, {
+      offset: 0x0000,
+      value,
+      mask: 0b11110000,
+      shift: 4,
+    }); },
+    get col() { return u8ArrayGetNumber(memory, {
+      offset: 0x0000,
+      mask: 0b00001111,
+    }); },
+    set col(value) { u8ArraySetNumber(memory, {
+      offset: 0x0000,
+      value,
+      mask: 0b00001111,
+    }); },
+  },
+  get selectedInventoryPlant() { return u8ArrayGetEnum(memory, plantTypesByNumber, {
+    offset: 0x0001,
+  }); },
+  set selectedInventoryPlant(value) { u8ArraySetEnum(memory, plantTypesByNumber, {
+    offset: 0x0001,
+    value,
+  }); },
+  get day() { return u8ArrayGetNumber(memory, {
+    offset: 0x0002,
+  }); },
+  set day(value) { u8ArraySetNumber(memory, {
+    offset: 0x0002,
+    value,
+  }); },
+  inventory: {
+    get Circle() { return u8ArrayGetNumber(memory, {
+      offset: 0x0003,
+    }); },
+    set Circle(value) { u8ArraySetNumber(memory, {
+      offset: 0x0003,
+      value,
+    }); },
+    get Triangle() { return u8ArrayGetNumber(memory, {
+      offset: 0x0004,
+    }); },
+    set Triangle(value) { u8ArraySetNumber(memory, {
+      offset: 0x0004,
+      value,
+    }); },
+    get Square() { return u8ArrayGetNumber(memory, {
+      offset: 0x0005,
+    }); },
+    set Square(value) { u8ArraySetNumber(memory, {
+      offset: 0x0005,
+      value,
+    }); },
+  },
+  grid(row, col) {
+    const offset = 0x0006 + (row*COLS + col)*0x0003;
+    const cell: Cell = {
+      row, col,
+      get sun() { return u8ArrayGetNumber(memory, {
+        offset,
+      }); },
+      set sun(value) { u8ArraySetNumber(memory, {
+        offset,
+        value,
+      }); },
+      get water() { return u8ArrayGetNumber(memory, {
+        offset: offset + 0x0001,
+      }); },
+      set water(value) { u8ArraySetNumber(memory, {
+        offset: offset + 0x0001,
+        value,
+      }); },
+      get plant() {
+        if (u8ArrayGetNumber(memory, {
+          offset: offset + 0x0002,
+          mask: 0b11110000,
+          shift: 4,
+        }) == 0) {
+          return null;
+        } else {
+          const plant: Plant = {
+            get type() { return u8ArrayGetEnum(memory, plantTypesByNumber, {
+              offset: offset + 0x0002,
+              mask: 0b11110000,
+              shift: 4,
+            })!; },
+            set type(value) { u8ArraySetEnum(memory, plantTypesByNumber, {
+              offset: offset + 0x0002,
+              value,
+              mask: 0b00001111,
+              shift: 4,
+            }); },
+            get growth() { return u8ArrayGetNumber(memory, {
+              offset: offset + 0x0002,
+              mask: 0b00001111,
+            }) as PlantGrowth; },
+            set growth(value) { u8ArraySetNumber(memory, {
+              offset: offset + 0x0002,
+              value,
+              mask: 0b00001111,
+            }); }
+          };
+          return plant;
+        }
+      },
+      set plant(value) {
+        if (value) {
+          u8ArraySetEnum(memory, plantTypesByNumber, {
+            offset: offset + 0x02,
+            value: value.type,
+            mask: 0b11110000,
+            shift: 4,
+          });
+          u8ArraySetNumber(memory, {
+            offset: offset + 0x02,
+            value: value.growth,
+            mask: 0b00001111,
+          });
+        } else {
+          u8ArraySetNumber(memory, {
+            offset: offset + 0x02,
+            value: 0,
+          });
+        }
+      }
+    };
+    return cell;
+  },
 };
-
-let grid: Cell[][] = [];
 
 /*
  * UI
@@ -277,7 +493,7 @@ function drawSquare(x: number, y: number) {
 
 // draws the player
 function drawPlayer() {
-  let { x, y } = gridCellULCorner(player.row, player.col);
+  let { x, y } = gridCellULCorner(state.player.row, state.player.col);
   x += CELL_SIZE / 2;
   y += CELL_SIZE / 2;
 
@@ -290,15 +506,15 @@ function drawPlayer() {
 // updates the inventory list displayed in the right sidebar
 function updateInventoryUI() {
   inventoryContainer.innerHTML = ""; // clear container
-  (Object.keys(inventory) as PlantType[]).forEach((plantType) => {
+  (Object.keys(state.inventory) as PlantType[]).forEach((plantType) => {
     const li = document.createElement("li");
-    li.textContent = `${plantType}: ${inventory[plantType]}`;
+    li.textContent = `${plantType}: ${state.inventory[plantType]}`;
     li.onclick = () => {
-      selectedInventoryPlant = plantType;
+      state.selectedInventoryPlant = plantType;
       updateInventoryUI();
     };
 
-    if (plantType === selectedInventoryPlant) li.classList.add("selected");
+    if (plantType === state.selectedInventoryPlant) li.classList.add("selected");
 
     inventoryContainer.appendChild(li);
   });
@@ -366,8 +582,8 @@ function updatePlantSummary(cell: Cell) {
 
 function handleGridClicked(x: number, y: number) {
   const gridPoint = canvasPointToGridPoint(x, y);
-  if (gridPoint && gridPointsAdjacent(player, gridPoint)) {
-    movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
+  if (gridPoint && gridPointsAdjacent(state.player, gridPoint)) {
+    movePlayer(gridPoint.col - state.player.col, gridPoint.row - state.player.row);
   }
 }
 
@@ -385,12 +601,12 @@ function handleKey(key: string) {
 }
 
 function updateDayCounter() {
-  dayCounterDisplay.innerHTML = `Day ${day}`;
+  dayCounterDisplay.innerHTML = `Day ${state.day}`;
 }
 
 function updateDisplay() {
   updateInventoryUI();
-  const cell = getCell(player.row, player.col);
+  const cell = getCell(state.player.row, state.player.col);
   if (cell) {
     updateDayCounter();
     updatePlantSummary(cell);
@@ -420,7 +636,7 @@ function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
 
 function getCell(row: number, col: number): Cell | null {
   if (gridPointInBounds(row, col)) {
-    return grid[row][col];
+    return state.grid(row, col);
   } else {
     return null;
   }
@@ -432,35 +648,35 @@ function randomPlantType(): PlantType {
 }
 
 function selectInventoryPlant(plantType: PlantType) {
-  selectedInventoryPlant = plantType;
+  state.selectedInventoryPlant = plantType;
   updateDisplay();
 }
 
 // sows a selected plant in the current cell if empty
 function sowPlant() {
-  const cell = getCell(player.row, player.col);
+  const cell = getCell(state.player.row, state.player.col);
   // skip if:
   if (
     !cell || // cell out of bounds
-    !selectedInventoryPlant || // no seeds selected
+    !state.selectedInventoryPlant || // no seeds selected
     cell.plant !== null || // cell not empty
-    inventory[selectedInventoryPlant] <= 0 // no seeds available
+    state.inventory[state.selectedInventoryPlant] <= 0 // no seeds available
   ) {
     return;
   }
   cell.plant = {
-    type: selectedInventoryPlant,
+    type: state.selectedInventoryPlant,
     growth: 1,
   };
-  inventory[selectedInventoryPlant]--;
+  state.inventory[state.selectedInventoryPlant]--;
   updateDisplay();
 }
 
 // reaps the plant from the current cell and adds it to the inventory
 function reapPlant() {
-  const cell = getCell(player.row, player.col);
+  const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant !== null) {
-    inventory[cell.plant.type] += cell.plant.growth;
+    state.inventory[cell.plant.type] += cell.plant.growth;
     cell.plant = null;
     updateDisplay();
   }
@@ -502,47 +718,48 @@ function tryGrowPlant(cell: Cell): boolean {
 }
 
 function growPlants() {
-  for (const row of grid) {
-    for (const cell of row) {
-      tryGrowPlant(cell);
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      tryGrowPlant(state.grid(row, col));
     }
   }
 }
 
 // moves the player and updates ui details of the cell
 function movePlayer(cols: number, rows: number) {
-  const newCol = player.col + cols;
-  const newRow = player.row + rows;
+  const newCol = state.player.col + cols;
+  const newRow = state.player.row + rows;
   const cell = getCell(newRow, newCol);
   if (cell) {
-    player.col = newCol;
-    player.row = newRow;
+    state.player.col = newCol;
+    state.player.row = newRow;
   }
   updateDisplay();
 }
 
 function distributeNaturalResources() {
-  grid.forEach((row) =>
-    row.forEach((cell) => {
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const cell = state.grid(row, col);
       cell.water = Math.min(
         cell.water + Math.floor(Math.random() * 21) + 5,
         100,
       ); // random water
       cell.sun = Math.min(Math.floor(Math.random() * 100), 100); // random sunlight
-    })
-  );
+    }
+  }
 }
 
 // simulates the next day by adding water and sunlight to plants
 function nextDay() {
   growPlants(); // intentionally done *before* updating cell resources for next turn
-  day++;
+  state.day++;
   distributeNaturalResources();
   updateDisplay();
 }
 
 function gameWon(): boolean {
-  return inventory.Circle + inventory.Square + inventory.Triangle >= 100;
+  return state.inventory.Circle + state.inventory.Square + state.inventory.Triangle >= 100;
 }
 
 /*
@@ -551,24 +768,18 @@ function gameWon(): boolean {
 
 // initializes the grid with random plants and empty cells
 function initializeGrid() {
-  grid = [];
   for (let row = 0; row < ROWS; row++) {
-    const newRow: Cell[] = [];
     for (let col = 0; col < COLS; col++) {
-      newRow.push({
-        row,
-        col,
-        sun: 0,
-        water: 0,
-        plant: (Math.random() < 0.02)
-          ? { // 2% chance to randomly place a plant
-            type: randomPlantType(),
-            growth: 1,
-          }
-          : null,
-      });
+      const cell = state.grid(row, col);
+      cell.sun = 0;
+      cell.water = 0;
+      cell.plant = (Math.random() < 0.02)
+        ? { // 2% chance to randomly place a plant
+          type: randomPlantType(),
+          growth: 1,
+        }
+        : null;
     }
-    grid.push(newRow);
   }
   // Distribute first day's resources onto grid
   distributeNaturalResources();
@@ -588,7 +799,7 @@ function initializeEvents() {
 
 function grantInitialSeeds() {
   for (const plantType of Object.keys(PlantType) as PlantType[]) {
-    inventory[plantType] = 1;
+    state.inventory[plantType] = 1;
   }
 }
 
