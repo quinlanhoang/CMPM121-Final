@@ -841,6 +841,7 @@ function initializeGrid() {
 // initializes all input events
 function initializeEvents() {
   globalThis.addEventListener("keydown", (e) => handleKey(e.key));
+  addEventListener("resize", recalculateDimensions);
   sowButton.addEventListener("click", sowPlant);
   reapButton.addEventListener("click", reapPlant);
   nextDayButton.addEventListener("click", nextDay);
