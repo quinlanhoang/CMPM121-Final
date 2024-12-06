@@ -208,7 +208,7 @@ const plantTypesByNumber: (PlantType | null)[] = [
 // but that's because JavaScript isn't designed
 // for guaranteeing data continuity.
 // It would be much more straightforward in a language like C.
-const memory = new Uint8Array(0x10000); // 64kb address space
+const memory = new Uint8Array(0x170); // 368-byte address space
 
 // The ugliness of it all will be fully contained
 // within the definition of this variable,
