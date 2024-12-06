@@ -484,16 +484,18 @@ function redo(): boolean {
 function serializeStateStacks() {
   return JSON.stringify({
     redoStack: redoStack.map(u8ArrayToHex),
-    undoStack: undoStack.map(u8ArrayToHex)
+    undoStack: undoStack.map(u8ArrayToHex),
   });
 }
 
 function deserializeStateStacks(serialized: string) {
   const data = JSON.parse(serialized);
-  for (const transaction of [
-    {from: data.undoStack, to: undoStack},
-    {from: data.redoStack, to: redoStack},
-  ]) {
+  for (
+    const transaction of [
+      { from: data.undoStack, to: undoStack },
+      { from: data.redoStack, to: redoStack },
+    ]
+  ) {
     transaction.to.length = 0;
     for (const hex of transaction.from) {
       const array = new Uint8Array(MEMORY_SIZE);
