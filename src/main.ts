@@ -1,12 +1,8 @@
 import "./style.css";
 
-
-
 /*
  * Utility
  */
-
-
 
 // Variadic tree type
 // (e.g. all of the following are NTree<number>:
@@ -33,16 +29,12 @@ function flatten<T>(tree: NTree<T>): T[] {
 }
 
 function randomItem<T>(from: T[]): T {
-  return from[Math.floor(Math.random()*from.length)];
+  return from[Math.floor(Math.random() * from.length)];
 }
-
-
 
 /*
  * DOM elements
  */
-
-
 
 const canvas = document.getElementById("game-grid") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -58,13 +50,9 @@ const reapButton = document.getElementById("reap-button")!;
 const inventoryContainer = document.getElementById("inventory-container")!;
 const plantHelpToolTip = document.getElementById("plant-help-tool-tip")!;
 
-
-
 /*
  * Types
  */
-
-
 
 // defining plant type enum for easy reference across the application
 enum PlantType {
@@ -76,8 +64,8 @@ enum PlantType {
 type PlantGrowth = 1 | 2 | 3;
 
 interface Plant {
-  type: PlantType,
-  growth: PlantGrowth,
+  type: PlantType;
+  growth: PlantGrowth;
 }
 
 interface PlantGrowthResources {
@@ -99,13 +87,9 @@ interface Cell extends GridPoint, PlantGrowthResources {
   plant: Plant | null;
 }
 
-
-
 /*
  * Constants
  */
-
-
 
 const ROWS = 10;
 const COLS = 12;
@@ -117,8 +101,9 @@ let GRID_PADDING = 0;
 
 const plantGridOffsetsThatMustBeFree: Record<PlantType, GridPoint[]> = (() => {
   // Get rectangle of grid offsets from -1 to 1
-  const allGridOffsets: GridPoint[] =
-    flatten([-1, 0, 1].map((row) => [-1, 0, 1].map((col) => ({ row, col }))));
+  const allGridOffsets: GridPoint[] = flatten(
+    [-1, 0, 1].map((row) => [-1, 0, 1].map((col) => ({ row, col }))),
+  );
   // Define predicates for which of those offsets must be free
   const predicates: Record<PlantType, (p: GridPoint) => boolean> = {
     [PlantType.Circle]: (p) => p.row != 0 && p.col != 0, // Diagonal neighbors must be free
@@ -139,13 +124,9 @@ const plantGrowthResourceRequirements: Record<number, PlantGrowthResources> = {
   [2]: { sun: 75, water: 75 },
 };
 
-
-
 /*
  * Global state
  */
-
-
 
 const player: GridPoint = { row: 0, col: 0 }; // player’s current position in the grid
 let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
@@ -159,13 +140,9 @@ const inventory: { [key in PlantType]: number } = {
 
 let grid: Cell[][] = [];
 
-
-
 /*
  * UI
  */
-
-
 
 // calculates the size of canvas dynamically based on window size
 function recalculateDimensions() {
@@ -234,10 +211,18 @@ function drawGrid() {
 
       // set background color based on plant type
       switch (cell.plant?.growth) {
-        case 1: ctx.fillStyle = "#3a5f0b"; break;
-        case 2: ctx.fillStyle = "#2e4b06"; break;
-        case 3: ctx.fillStyle = "#1e3202"; break;
-        default: ctx.fillStyle = "#d2b48c"; break; // default dirt
+        case 1:
+          ctx.fillStyle = "#3a5f0b";
+          break;
+        case 2:
+          ctx.fillStyle = "#2e4b06";
+          break;
+        case 3:
+          ctx.fillStyle = "#1e3202";
+          break;
+        default:
+          ctx.fillStyle = "#d2b48c";
+          break; // default dirt
       }
       ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
 
@@ -246,9 +231,15 @@ function drawGrid() {
 
       // draw specific plant shapes
       switch (cell.plant?.type) {
-        case PlantType.Circle: drawCircle(x, y); break;
-        case PlantType.Triangle: drawTriangle(x, y); break;
-        case PlantType.Square: drawSquare(x, y); break;
+        case PlantType.Circle:
+          drawCircle(x, y);
+          break;
+        case PlantType.Triangle:
+          drawTriangle(x, y);
+          break;
+        case PlantType.Square:
+          drawSquare(x, y);
+          break;
       }
     }
   }
@@ -412,13 +403,9 @@ function updateDisplay() {
   }
 }
 
-
-
 /*
  * Application logic
  */
-
-
 
 function gridPointInBounds(row: number, col: number): boolean {
   return row >= 0 && row < ROWS && col >= 0 && col < COLS;
@@ -463,7 +450,7 @@ function sowPlant() {
   }
   cell.plant = {
     type: selectedInventoryPlant,
-    growth: 1
+    growth: 1,
   };
   inventory[selectedInventoryPlant]--;
   updateDisplay();
@@ -482,11 +469,13 @@ function reapPlant() {
 function plantHasRoomToGrow(cell: Cell): boolean {
   return !!cell.plant &&
     plantGridOffsetsThatMustBeFree[cell.plant.type].every((p) =>
-      !(getCell(cell.row + p.row, cell.col + p.col)?.plant));
+      !(getCell(cell.row + p.row, cell.col + p.col)?.plant)
+    );
 }
 
 function plantHasResourcesToGrow(cell: Cell): boolean {
-  return (!!cell.plant && cell.plant.growth in plantGrowthResourceRequirements) &&
+  return (!!cell.plant &&
+    cell.plant.growth in plantGrowthResourceRequirements) &&
     cell.sun >= plantGrowthResourceRequirements[cell.plant.growth].sun &&
     cell.water >= plantGrowthResourceRequirements[cell.plant.growth].water;
 }
@@ -498,8 +487,12 @@ function plantCanGrow(cell: Cell): boolean {
 function tryGrowPlant(cell: Cell): boolean {
   if (plantCanGrow(cell)) {
     switch (cell.plant!.growth) {
-      case 1: cell.water -= 50; break;
-      case 2: cell.water -= 75; break;
+      case 1:
+        cell.water -= 50;
+        break;
+      case 2:
+        cell.water -= 75;
+        break;
     }
     cell.plant!.growth++;
     return true;
@@ -552,13 +545,9 @@ function gameWon(): boolean {
   return inventory.Circle + inventory.Square + inventory.Triangle >= 100;
 }
 
-
-
 /*
  * Initialization
  */
-
-
 
 // initializes the grid with random plants and empty cells
 function initializeGrid() {
@@ -571,10 +560,12 @@ function initializeGrid() {
         col,
         sun: 0,
         water: 0,
-        plant: (Math.random() < 0.02) ? { // 2% chance to randomly place a plant
-          type: randomPlantType(),
-          growth: 1,
-        } : null
+        plant: (Math.random() < 0.02)
+          ? { // 2% chance to randomly place a plant
+            type: randomPlantType(),
+            growth: 1,
+          }
+          : null,
       });
     }
     grid.push(newRow);
@@ -589,7 +580,10 @@ function initializeEvents() {
   sowButton.addEventListener("click", sowPlant);
   reapButton.addEventListener("click", reapPlant);
   nextDayButton.addEventListener("click", nextDay);
-  canvas.addEventListener("click", (e) => handleGridClicked(e.offsetX, e.offsetY));
+  canvas.addEventListener(
+    "click",
+    (e) => handleGridClicked(e.offsetX, e.offsetY),
+  );
 }
 
 function grantInitialSeeds() {
