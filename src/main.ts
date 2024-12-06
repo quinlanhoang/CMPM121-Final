@@ -983,11 +983,16 @@ function grantInitialSeeds() {
   }
 }
 
+function initializeDayCount() {
+  state.day = 1;
+}
+
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
   initializeEvents();
   grantInitialSeeds();
+  initializeDayCount();
   updateDisplay();
 }
 
