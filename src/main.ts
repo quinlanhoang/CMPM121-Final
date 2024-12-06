@@ -812,6 +812,8 @@ function handleKey(key: string) {
   if (key === "1") selectInventoryPlant(PlantType.Circle);
   if (key === "2") selectInventoryPlant(PlantType.Triangle);
   if (key === "3") selectInventoryPlant(PlantType.Square);
+  if (key === "z") undo();
+  if (key === "y") redo();
 }
 
 function updateDayCounter() {
