@@ -1,22 +1,70 @@
 import "./style.css";
 
-// dom elements
+
+
+/*
+ * Utility
+ */
+
+
+
+// Variadic tree type
+// (e.g. all of the following are NTree<number>:
+//    1,
+//    [2, 3],
+//    [4, [5, 6], 7])
+// Currently we only need this to write a definition of flatten() that makes sense.
+type NTree<T> = T | NTree<T>[];
+
+// Converts a variadic tree into a flat array
+// (e.g. [[1, [2, 3]], [[4, 5], 6], [7, [8], 9]] => [1, 2, 3, 4, 5, 6, 7, 8, 9])
+function flatten<T>(tree: NTree<T>): T[] {
+  if (tree instanceof Array) {
+    const result: T[] = [];
+    for (const item of tree) {
+      for (const subitem of flatten(item)) {
+        result.push(subitem);
+      }
+    }
+    return result;
+  } else {
+    return [tree];
+  }
+}
+
+function randomItem<T>(from: T[]): T {
+  return from[Math.floor(Math.random()*from.length)];
+}
+
+
+
+/*
+ * DOM elements
+ */
+
+
+
 const canvas = document.getElementById("game-grid") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
-const dayCounterDisplay = document.getElementById("day-counter") as HTMLElement;
-const typeDisplay = document.getElementById("plant-type") as HTMLElement;
-const growthLevelDisplay = document.getElementById(
-  "plant-growth-level",
-) as HTMLElement;
-const waterDisplay = document.getElementById("plant-water") as HTMLElement;
-const sunDisplay = document.getElementById("plant-sun") as HTMLElement;
-const canGrowDisplay = document.getElementById("plant-can-grow") as HTMLElement;
-const nextDayButton = document.getElementById("next-day-button") as HTMLElement;
-const sowButton = document.getElementById("sow-button") as HTMLElement;
-const reapButton = document.getElementById("reap-button") as HTMLElement;
+const dayCounterDisplay = document.getElementById("day-counter")!;
+const typeDisplay = document.getElementById("plant-type")!;
+const growthLevelDisplay = document.getElementById("plant-growth-level")!;
+const waterDisplay = document.getElementById("plant-water")!;
+const sunDisplay = document.getElementById("plant-sun")!;
+const canGrowDisplay = document.getElementById("plant-can-grow")!;
+const nextDayButton = document.getElementById("next-day-button")!;
+const sowButton = document.getElementById("sow-button")!;
+const reapButton = document.getElementById("reap-button")!;
 const inventoryContainer = document.getElementById("inventory-container")!;
-//const plantHelp = document.getElementById("plant-help") as HTMLElement;
 const plantHelpToolTip = document.getElementById("plant-help-tool-tip")!;
+
+
+
+/*
+ * Types
+ */
+
+
 
 // defining plant type enum for easy reference across the application
 enum PlantType {
@@ -25,31 +73,80 @@ enum PlantType {
   Square = "Square",
 }
 
-// definition of a grid cell and its properties
-interface Cell {
-  row: number;
-  col: number;
+type PlantGrowth = 1 | 2 | 3;
+
+interface Plant {
+  type: PlantType,
+  growth: PlantGrowth,
+}
+
+interface PlantGrowthResources {
   sun: number;
   water: number;
-  growth: number; // 0 = barren; 1-3 = plant growth stages
-  plant: PlantType | null;
 }
 
 interface Point {
   x: number;
   y: number;
 }
+
 interface GridPoint {
   row: number;
   col: number;
 }
 
-// global state variables
+interface Cell extends GridPoint, PlantGrowthResources {
+  plant: Plant | null;
+}
+
+
+
+/*
+ * Constants
+ */
+
+
+
 const ROWS = 10;
 const COLS = 12;
+
+// Pseudoconstants (will hardly ever change / changes should only affect presentation, not logic)
 let CELL_SIZE = 0;
 let CELL_PADDING = 0;
 let GRID_PADDING = 0;
+
+const plantGridOffsetsThatMustBeFree: Record<PlantType, GridPoint[]> = (() => {
+  // Get rectangle of grid offsets from -1 to 1
+  const allGridOffsets: GridPoint[] =
+    flatten([-1, 0, 1].map((row) => [-1, 0, 1].map((col) => ({ row, col }))));
+  // Define predicates for which of those offsets must be free
+  const predicates: Record<PlantType, (p: GridPoint) => boolean> = {
+    [PlantType.Circle]: (p) => p.row != 0 && p.col != 0, // Diagonal neighbors must be free
+    [PlantType.Triangle]: (p) => (p.row == 0) != (p.col == 0), // Cardinal neighbors must be free
+    [PlantType.Square]: (p) => !(p.row == 0 && p.col == 0), // All neighbors must be free
+  };
+  // Dictionary of offsets that must be free =
+  //    result of filtering rectangle of grid offsets against those predicates
+  const result: Partial<Record<PlantType, GridPoint[]>> = {};
+  for (const plantType of Object.keys(predicates) as PlantType[]) {
+    result[plantType] = allGridOffsets.filter(predicates[plantType]);
+  }
+  return result as Record<PlantType, GridPoint[]>;
+})();
+
+const plantGrowthResourceRequirements: Record<number, PlantGrowthResources> = {
+  [1]: { sun: 50, water: 50 },
+  [2]: { sun: 75, water: 75 },
+};
+
+
+
+/*
+ * Global state
+ */
+
+
+
 const player: GridPoint = { row: 0, col: 0 }; // player’s current position in the grid
 let selectedInventoryPlant: PlantType | null = null; // plant selected for sowing
 let day = 1;
@@ -62,45 +159,13 @@ const inventory: { [key in PlantType]: number } = {
 
 let grid: Cell[][] = [];
 
-// initializes the grid with random plants and empty cells
-function initializeGrid() {
-  grid = [];
-  for (let row = 0; row < ROWS; row++) {
-    const newRow: Cell[] = [];
-    for (let col = 0; col < COLS; col++) {
-      if (Math.random() < 0.02) {
-        // 2% chance to randomly place a plant
-        newRow.push({
-          row,
-          col,
-          sun: 0,
-          water: 0,
-          growth: 1,
-          plant: randomPlantType(),
-        });
-      } else {
-        // empty cell
-        newRow.push({
-          row,
-          col,
-          sun: 0,
-          water: 0,
-          growth: 0,
-          plant: null,
-        });
-      }
-    }
-    grid.push(newRow);
-  }
-}
 
-// returns a random plant type
-function randomPlantType(): PlantType {
-  const rand = Math.random();
-  if (rand < 0.33) return PlantType.Circle;
-  if (rand < 0.66) return PlantType.Triangle;
-  return PlantType.Square;
-}
+
+/*
+ * UI
+ */
+
+
 
 // calculates the size of canvas dynamically based on window size
 function recalculateDimensions() {
@@ -131,18 +196,7 @@ function draw() {
   drawPlayer();
 }
 
-function gridPointInBounds(row: number, col: number): boolean {
-  return row >= 0 && row < ROWS && col >= 0 && col < COLS;
-}
-
-function getCell(row: number, col: number): Cell | null {
-  if (gridPointInBounds(row, col)) {
-    return grid[row][col];
-  } else {
-    return null;
-  }
-}
-
+// Canvas offset of upper-lefthand corner of grid point
 function gridCellULCorner(row: number, col: number): Point {
   return {
     x: GRID_PADDING + col * (CELL_SIZE + CELL_PADDING),
@@ -150,6 +204,7 @@ function gridCellULCorner(row: number, col: number): Point {
   };
 }
 
+// Two-dimensional index of grid cell (if any) which contains given canvas offset
 function canvasPointToGridPoint(x: number, y: number): GridPoint | null {
   const result = {
     col: Math.floor((x - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
@@ -178,11 +233,11 @@ function drawGrid() {
       const cell = getCell(row, col)!;
 
       // set background color based on plant type
-      ctx.fillStyle = "#d2b48c"; // default dirt
-      if (cell.plant !== null) {
-        if (cell.growth === 1) ctx.fillStyle = "#3a5f0b";
-        if (cell.growth === 2) ctx.fillStyle = "#2e4b06";
-        if (cell.growth === 3) ctx.fillStyle = "#1e3202";
+      switch (cell.plant?.growth) {
+        case 1: ctx.fillStyle = "#3a5f0b"; break;
+        case 2: ctx.fillStyle = "#2e4b06"; break;
+        case 3: ctx.fillStyle = "#1e3202"; break;
+        default: ctx.fillStyle = "#d2b48c"; break; // default dirt
       }
       ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
 
@@ -190,9 +245,11 @@ function drawGrid() {
       ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
 
       // draw specific plant shapes
-      if (cell.plant === PlantType.Circle) drawCircle(x, y);
-      if (cell.plant === PlantType.Triangle) drawTriangle(x, y);
-      if (cell.plant === PlantType.Square) drawSquare(x, y);
+      switch (cell.plant?.type) {
+        case PlantType.Circle: drawCircle(x, y); break;
+        case PlantType.Triangle: drawTriangle(x, y); break;
+        case PlantType.Square: drawSquare(x, y); break;
+      }
     }
   }
 }
@@ -239,35 +296,6 @@ function drawPlayer() {
   ctx.fill();
 }
 
-// sows a selected plant in the current cell if empty
-function sowPlant() {
-  const cell = getCell(player.row, player.col);
-  if (
-    !cell ||
-    !selectedInventoryPlant ||
-    cell.plant !== null ||
-    inventory[selectedInventoryPlant] <= 0
-  ) {
-    return;
-  }
-
-  cell.plant = selectedInventoryPlant;
-  cell.growth = 1;
-  inventory[selectedInventoryPlant]--;
-  updateDisplay();
-}
-
-// reaps the plant from the current cell and adds it to the inventory
-function reapPlant() {
-  const cell = getCell(player.row, player.col);
-  if (cell && cell.plant !== null) {
-    inventory[cell.plant] += cell.growth;
-    cell.plant = null;
-    cell.growth = 0;
-    updateDisplay();
-  }
-}
-
 // updates the inventory list displayed in the right sidebar
 function updateInventoryUI() {
   inventoryContainer.innerHTML = ""; // clear container
@@ -287,109 +315,180 @@ function updateInventoryUI() {
 
 // updates the tooltip in the plant help section dynamically
 function updatePlantHelp(cell: Cell) {
-  if (cell.plant) {
-    if (cell.plant === PlantType.Circle) {
-      plantHelpToolTip.textContent =
+  plantHelpToolTip.textContent = "";
+  // describe type
+  switch (cell.plant?.type) {
+    case PlantType.Circle:
+      plantHelpToolTip.textContent +=
         "circle plants cannot grow if diagonal plots are occupied.\n";
-    } else if (cell.plant === PlantType.Triangle) {
-      plantHelpToolTip.textContent =
+      break;
+    case PlantType.Triangle:
+      plantHelpToolTip.textContent +=
         "triangle plants cannot grow if adjacent plots are occupied.\n";
-    } else if (cell.plant === PlantType.Square) {
-      plantHelpToolTip.textContent =
+      break;
+    case PlantType.Square:
+      plantHelpToolTip.textContent +=
         "square plants cannot grow if surrounding plots are occupied.\n";
-    }
-    switch (cell.growth) {
-      case 0:
-        plantHelpToolTip.textContent +=
-          "there is a plant at this cell, but the cell's growth level is still 0, indicating no plant. this is a bug.\n";
-        break;
-      case 1:
-        plantHelpToolTip.textContent +=
-          "level 1 plants require at least 50 water and 50 sun.\n";
-        break;
-      case 2:
-        plantHelpToolTip.textContent +=
-          "level 2 plants require at least 75 water and 75 sun.\n";
-        break;
-      default:
-        plantHelpToolTip.textContent +=
-          "this plant has reached its growth limit and must be harvested.\n";
-        break;
-    }
-  } else {
-    plantHelpToolTip.textContent = "no plants here.\n";
+      break;
   }
+  // describe growth level
+  switch (cell.plant?.growth) {
+    case 1:
+      plantHelpToolTip.textContent +=
+        "level 1 plants require at least 50 water and 50 sun.\n";
+      break;
+    case 2:
+      plantHelpToolTip.textContent +=
+        "level 2 plants require at least 75 water and 75 sun.\n";
+      break;
+    case 3:
+      plantHelpToolTip.textContent +=
+        "this plant has reached its growth limit and must be harvested.\n";
+      break;
+  }
+  // describe resource availability
   plantHelpToolTip.textContent +=
     `currently, this spot has ${cell.water} water and ${cell.sun} sun.\n`;
-  if (cell.plant) {
-    if (plantCanGrow(cell)) {
-      plantHelpToolTip.textContent += "this plant will grow today!\n";
-    } else {
-      plantHelpToolTip.textContent += "this plant will not grow today.\n";
-    }
+  // describe whether plant will grow
+  if (plantCanGrow(cell)) {
+    plantHelpToolTip.textContent += "this plant will grow today!\n";
+  } else if (cell.plant) {
+    plantHelpToolTip.textContent += "this plant will not grow today.\n";
+  } else {
+    plantHelpToolTip.textContent += "no plant here.\n";
+  }
+}
+
+function updatePlantSummary(cell: Cell) {
+  typeDisplay.textContent = cell.plant?.type || "None";
+  growthLevelDisplay.textContent = `${cell.plant?.growth || 0}`;
+  waterDisplay.textContent = `${cell.water}`;
+  sunDisplay.textContent = `${cell.sun}`;
+  if (plantCanGrow(cell)) {
+    canGrowDisplay.textContent = "yes";
+    canGrowDisplay.className = "success";
+  } else {
+    canGrowDisplay.textContent = "no";
+    canGrowDisplay.className = "fail";
+  }
+}
+
+function handleGridClicked(x: number, y: number) {
+  const gridPoint = canvasPointToGridPoint(x, y);
+  if (gridPoint && gridPointsAdjacent(player, gridPoint)) {
+    movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
+  }
+}
+
+function handleKey(key: string) {
+  if (key === "ArrowUp") movePlayer(0, -1);
+  if (key === "ArrowDown") movePlayer(0, 1);
+  if (key === "ArrowLeft") movePlayer(-1, 0);
+  if (key === "ArrowRight") movePlayer(1, 0);
+  if (key === "r") reapPlant();
+  if (key === "s") sowPlant();
+  if (key === "n") nextDay();
+  if (key === "1") selectInventoryPlant(PlantType.Circle);
+  if (key === "2") selectInventoryPlant(PlantType.Triangle);
+  if (key === "3") selectInventoryPlant(PlantType.Square);
+}
+
+function updateDayCounter() {
+  dayCounterDisplay.innerHTML = `Day ${day}`;
+}
+
+function updateDisplay() {
+  updateInventoryUI();
+  const cell = getCell(player.row, player.col);
+  if (cell) {
+    updateDayCounter();
+    updatePlantSummary(cell);
+    updatePlantHelp(cell);
+  }
+  draw();
+  if (gameWon()) {
+    alert("You win! You have prepared the requested shipment of 100 crops.");
+    location.reload();
+  }
+}
+
+
+
+/*
+ * Application logic
+ */
+
+
+
+function gridPointInBounds(row: number, col: number): boolean {
+  return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+}
+
+function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
+  return (
+    (Math.abs(a.row - b.row) == 1 && a.col == b.col) ||
+    (Math.abs(a.col - b.col) == 1 && a.row == b.row)
+  );
+}
+
+function getCell(row: number, col: number): Cell | null {
+  if (gridPointInBounds(row, col)) {
+    return grid[row][col];
+  } else {
+    return null;
+  }
+}
+
+// returns a random plant type
+function randomPlantType(): PlantType {
+  return randomItem(Object.keys(PlantType) as PlantType[]);
+}
+
+function selectInventoryPlant(plantType: PlantType) {
+  selectedInventoryPlant = plantType;
+  updateDisplay();
+}
+
+// sows a selected plant in the current cell if empty
+function sowPlant() {
+  const cell = getCell(player.row, player.col);
+  // skip if:
+  if (
+    !cell || // cell out of bounds
+    !selectedInventoryPlant || // no seeds selected
+    cell.plant !== null || // cell not empty
+    inventory[selectedInventoryPlant] <= 0 // no seeds available
+  ) {
+    return;
+  }
+  cell.plant = {
+    type: selectedInventoryPlant,
+    growth: 1
+  };
+  inventory[selectedInventoryPlant]--;
+  updateDisplay();
+}
+
+// reaps the plant from the current cell and adds it to the inventory
+function reapPlant() {
+  const cell = getCell(player.row, player.col);
+  if (cell && cell.plant !== null) {
+    inventory[cell.plant.type] += cell.plant.growth;
+    cell.plant = null;
+    updateDisplay();
   }
 }
 
 function plantHasRoomToGrow(cell: Cell): boolean {
-  const gridPointsToCheck: GridPoint[] = [];
-  switch (cell.plant) {
-    case null:
-      return false;
-    case PlantType.Circle:
-      for (const rowOffset of [-1, 1]) {
-        for (const colOffset of [-1, 1]) {
-          gridPointsToCheck.push({
-            row: cell.row + rowOffset,
-            col: cell.col + colOffset,
-          });
-        }
-      }
-      break;
-    case PlantType.Triangle:
-      for (const rowOffset of [-1, 0, 1]) {
-        for (const colOffset of [-1, 0, 1]) {
-          if ((rowOffset == 0) != (colOffset == 0)) {
-            gridPointsToCheck.push({
-              row: cell.row + rowOffset,
-              col: cell.col + colOffset,
-            });
-          }
-        }
-      }
-      break;
-    case PlantType.Square:
-      for (const rowOffset of [-1, 0, 1]) {
-        for (const colOffset of [-1, 0, 1]) {
-          if (rowOffset != 0 || colOffset != 0) {
-            gridPointsToCheck.push({
-              row: cell.row + rowOffset,
-              col: cell.col + colOffset,
-            });
-          }
-        }
-      }
-      break;
-    default:
-      return false;
-  }
-  for (const gridPoint of gridPointsToCheck) {
-    const otherCell = getCell(gridPoint.row, gridPoint.col);
-    if (otherCell && otherCell.plant) {
-      return false;
-    }
-  }
-  return true;
+  return !!cell.plant &&
+    plantGridOffsetsThatMustBeFree[cell.plant.type].every((p) =>
+      !(getCell(cell.row + p.row, cell.col + p.col)?.plant));
 }
 
 function plantHasResourcesToGrow(cell: Cell): boolean {
-  switch (cell.growth) {
-    case 1:
-      return cell.sun >= 50 && cell.water >= 50;
-    case 2:
-      return cell.sun >= 75 && cell.water >= 75;
-    default:
-      return false;
-  }
+  return (!!cell.plant && cell.plant.growth in plantGrowthResourceRequirements) &&
+    cell.sun >= plantGrowthResourceRequirements[cell.plant.growth].sun &&
+    cell.water >= plantGrowthResourceRequirements[cell.plant.growth].water;
 }
 
 function plantCanGrow(cell: Cell): boolean {
@@ -398,15 +497,11 @@ function plantCanGrow(cell: Cell): boolean {
 
 function tryGrowPlant(cell: Cell): boolean {
   if (plantCanGrow(cell)) {
-    switch (cell.growth) {
-      case 1:
-        cell.water -= 50;
-        break;
-      case 2:
-        cell.water -= 75;
-        break;
+    switch (cell.plant!.growth) {
+      case 1: cell.water -= 50; break;
+      case 2: cell.water -= 75; break;
     }
-    cell.growth++;
+    cell.plant!.growth++;
     return true;
   } else {
     return false;
@@ -418,20 +513,6 @@ function growPlants() {
     for (const cell of row) {
       tryGrowPlant(cell);
     }
-  }
-}
-
-function updatePlantSummary(cell: Cell) {
-  typeDisplay.textContent = cell.plant;
-  growthLevelDisplay.textContent = `${cell.growth}`;
-  waterDisplay.textContent = `${cell.water}`;
-  sunDisplay.textContent = `${cell.sun}`;
-  if (plantCanGrow(cell)) {
-    canGrowDisplay.textContent = "yes";
-    canGrowDisplay.className = "success";
-  } else {
-    canGrowDisplay.textContent = "no";
-    canGrowDisplay.className = "fail";
   }
 }
 
@@ -467,86 +548,60 @@ function nextDay() {
   updateDisplay();
 }
 
-function gridPointsAdjacent(a: GridPoint, b: GridPoint): boolean {
-  return (
-    (Math.abs(a.row - b.row) == 1 && a.col == b.col) ||
-    (Math.abs(a.col - b.col) == 1 && a.row == b.row)
-  );
-}
-
-function handleGridClicked(x: number, y: number) {
-  const gridPoint = canvasPointToGridPoint(x, y);
-  if (gridPoint && gridPointsAdjacent(player, gridPoint)) {
-    movePlayer(gridPoint.col - player.col, gridPoint.row - player.row);
-  }
-}
-
-function updateDayCounter() {
-  dayCounterDisplay.innerHTML = `Day ${day}`;
-}
-
 function gameWon(): boolean {
   return inventory.Circle + inventory.Square + inventory.Triangle >= 100;
 }
 
-function updateDisplay() {
-  updateInventoryUI();
-  const cell = getCell(player.row, player.col);
-  if (cell) {
-    updateDayCounter();
-    updatePlantSummary(cell);
-    updatePlantHelp(cell);
+
+
+/*
+ * Initialization
+ */
+
+
+
+// initializes the grid with random plants and empty cells
+function initializeGrid() {
+  grid = [];
+  for (let row = 0; row < ROWS; row++) {
+    const newRow: Cell[] = [];
+    for (let col = 0; col < COLS; col++) {
+      newRow.push({
+        row,
+        col,
+        sun: 0,
+        water: 0,
+        plant: (Math.random() < 0.02) ? { // 2% chance to randomly place a plant
+          type: randomPlantType(),
+          growth: 1,
+        } : null
+      });
+    }
+    grid.push(newRow);
   }
-  draw();
-  if (gameWon()) {
-    alert("You win! You have prepared the requested shipment of 100 crops.");
-    location.reload();
-  }
+  // Distribute first day's resources onto grid
+  distributeNaturalResources();
 }
 
 // initializes all input events
 function initializeEvents() {
-  globalThis.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowUp") movePlayer(0, -1);
-    if (e.key === "ArrowDown") movePlayer(0, 1);
-    if (e.key === "ArrowLeft") movePlayer(-1, 0);
-    if (e.key === "ArrowRight") movePlayer(1, 0);
-    if (e.key === "r") reapPlant();
-    if (e.key === "s") sowPlant();
-    if (e.key === "n") nextDay();
-    if (e.key === "1") {
-      selectedInventoryPlant = PlantType.Circle;
-      updateDisplay();
-    }
-    if (e.key === "2") {
-      selectedInventoryPlant = PlantType.Triangle;
-      updateDisplay();
-    }
-    if (e.key === "3") {
-      selectedInventoryPlant = PlantType.Square;
-      updateDisplay();
-    }
-  });
-
+  globalThis.addEventListener("keydown", (e) => handleKey(e.key));
   sowButton.addEventListener("click", sowPlant);
   reapButton.addEventListener("click", reapPlant);
   nextDayButton.addEventListener("click", nextDay);
-  canvas.addEventListener("click", (e) => {
-    handleGridClicked(e.offsetX, e.offsetY);
-  });
+  canvas.addEventListener("click", (e) => handleGridClicked(e.offsetX, e.offsetY));
 }
 
 function grantInitialSeeds() {
-  inventory.Circle = 1;
-  inventory.Square = 1;
-  inventory.Triangle = 1;
+  for (const plantType of Object.keys(PlantType) as PlantType[]) {
+    inventory[plantType] = 1;
+  }
 }
 
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
   initializeEvents();
-  distributeNaturalResources();
   grantInitialSeeds();
   updateDisplay();
 }
