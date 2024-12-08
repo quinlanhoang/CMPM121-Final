@@ -251,7 +251,15 @@ const redoStack: Uint8Array[] = [];
 // within the definition of this variable,
 // which will use getters and setters
 // to insulate the rest of the code from the pointer arithmetic.
+
+enum Weather {
+  Sunny = "Sunny",
+  Rainy = "Rainy",
+  Normal = "Normal",
+}
+
 const state: {
+  weather: Weather;
   saveSlot: number;
   player: GridPoint;
   selectedInventoryPlant: PlantType | null;
@@ -259,6 +267,7 @@ const state: {
   inventory: { [key in PlantType]: number };
   grid(row: number, col: number): Cell;
 } = {
+  weather: Weather.Normal,
   get saveSlot() {
     return parseInt(saveSlotInput.value);
   },
@@ -447,6 +456,37 @@ const state: {
   },
 };
 
+function applyWeatherEffects() {
+  switch (state.weather) {
+    case Weather.Sunny:
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cell = state.grid(row, col);
+          cell.sun = Math.min(cell.sun + 20, 100); // Increase sunlight
+        }
+      }
+      break;
+
+    case Weather.Rainy:
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cell = state.grid(row, col);
+          cell.water = Math.min(cell.water + 20, 100); // Increase water
+        }
+      }
+      break;
+
+    case Weather.Normal:
+      // No additional effects
+      break;
+  }
+}
+
+function determineWeather(): Weather {
+  const weatherOptions = [Weather.Sunny, Weather.Rainy, Weather.Normal];
+  return randomItem(weatherOptions); // Choose weather randomly
+}
+
 function lastMemory() {
   return undoStack[undoStack.length - 1];
 }
@@ -566,6 +606,7 @@ function loadAutosave(): boolean {
 
 function commitState() {
   autosave();
+  localStorage.setItem('currentWeather', state.weather);
   detectAndReportWin();
 }
 
@@ -737,49 +778,65 @@ function updateInventoryUI() {
 
 // updates the tooltip in the plant help section dynamically
 function updatePlantHelp(cell: Cell) {
-  plantHelpToolTip.textContent = "";
-  // describe type
-  switch (cell.plant?.type) {
-    case PlantType.Circle:
-      plantHelpToolTip.textContent +=
-        "circle plants cannot grow if diagonal plots are occupied.\n";
-      break;
-    case PlantType.Triangle:
-      plantHelpToolTip.textContent +=
-        "triangle plants cannot grow if adjacent plots are occupied.\n";
-      break;
-    case PlantType.Square:
-      plantHelpToolTip.textContent +=
-        "square plants cannot grow if surrounding plots are occupied.\n";
-      break;
+  const weatherMessages = {
+    [Weather.Sunny]: "It's a sunny day! Your plants are soaking up extra sunlight.",
+    [Weather.Rainy]: "It's a rainy day! Your plants are getting extra water.",
+    [Weather.Normal]: "It's a normal day.",
+  };
+
+  // Set the weather message
+  const weatherMessage = weatherMessages[state.weather];
+
+  // Set the plant-specific help text
+  let plantMessage = "No plant here.\n";
+  if (cell.plant) {
+    // Describe type
+    switch (cell.plant.type) {
+      case PlantType.Circle:
+        plantMessage =
+          "Circle plants cannot grow if diagonal plots are occupied.\n";
+        break;
+      case PlantType.Triangle:
+        plantMessage =
+          "Triangle plants cannot grow if adjacent plots are occupied.\n";
+        break;
+      case PlantType.Square:
+        plantMessage =
+          "Square plants cannot grow if surrounding plots are occupied.\n";
+        break;
+    }
+
+    // Describe growth level
+    switch (cell.plant.growth) {
+      case 1:
+        plantMessage +=
+          "Level 1 plants require at least 50 water and 50 sun.\n";
+        break;
+      case 2:
+        plantMessage +=
+          "Level 2 plants require at least 75 water and 75 sun.\n";
+        break;
+      case 3:
+        plantMessage +=
+          "This plant has reached its growth limit and must be harvested.\n";
+        break;
+    }
+
+    // Describe resource availability
+    plantMessage += `This spot has ${cell.water} water and ${cell.sun} sun.\n`;
+
+    // Describe whether the plant can grow
+    if (plantCanGrow(cell)) {
+      plantMessage += "This plant will grow today!\n";
+    } else {
+      plantMessage += "This plant will not grow today.\n";
+    }
   }
-  // describe growth level
-  switch (cell.plant?.growth) {
-    case 1:
-      plantHelpToolTip.textContent +=
-        "level 1 plants require at least 50 water and 50 sun.\n";
-      break;
-    case 2:
-      plantHelpToolTip.textContent +=
-        "level 2 plants require at least 75 water and 75 sun.\n";
-      break;
-    case 3:
-      plantHelpToolTip.textContent +=
-        "this plant has reached its growth limit and must be harvested.\n";
-      break;
-  }
-  // describe resource availability
-  plantHelpToolTip.textContent +=
-    `currently, this spot has ${cell.water} water and ${cell.sun} sun.\n`;
-  // describe whether plant will grow
-  if (plantCanGrow(cell)) {
-    plantHelpToolTip.textContent += "this plant will grow today!\n";
-  } else if (cell.plant) {
-    plantHelpToolTip.textContent += "this plant will not grow today.\n";
-  } else {
-    plantHelpToolTip.textContent += "no plant here.\n";
-  }
+
+  // Update the tooltip with both weather and plant messages
+  plantHelpToolTip.textContent = `${weatherMessage}\n\n${plantMessage}`;
 }
+
 
 function updatePlantSummary(cell: Cell) {
   typeDisplay.textContent = cell.plant?.type || "None";
@@ -821,7 +878,13 @@ function handleKey(key: string) {
 }
 
 function updateDayCounter() {
-  dayCounterDisplay.innerHTML = `Day ${state.day}`;
+  const weatherEmoji = {
+    [Weather.Sunny]: "🌞",
+    [Weather.Rainy]: "🌧️",
+    [Weather.Normal]: "🌤️",
+  };
+
+  dayCounterDisplay.innerHTML = `Day ${state.day} ${weatherEmoji[state.weather]}`;
 }
 
 function detectAndReportWin() {
@@ -1153,12 +1216,15 @@ function distributeNaturalResources() {
 // simulates the next day by adding water and sunlight to plants
 function nextDay() {
   beginUndoStep();
+  state.weather = determineWeather();
+  applyWeatherEffects();
   growPlants(); // intentionally done *before* updating cell resources for next turn
   state.day++;
   distributeNaturalResources();
   updateDisplay();
   commitState();
   reportNextDay();
+  updateDayCounter();
 }
 
 function gameWon(): boolean {
@@ -1235,6 +1301,10 @@ function initializeGame() {
   initializeDayCount();
   initializePlayerPosition();
   resetStateStacks();
+
+  const savedWeather = localStorage.getItem('currentWeather') as Weather;
+  state.weather = savedWeather || Weather.Normal;
+
   updateDisplay();
   reportNewGame();
   showTutorialMessage();

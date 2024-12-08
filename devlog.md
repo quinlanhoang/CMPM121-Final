@@ -118,3 +118,12 @@ Here is how our thinking changed over time:
   requirements, and I picked up where they left off and finished it up. I was
   able to constrain myself to the established implementation and coding style
   much more effectively with some work already in front of me to build on.
+
+
+## Project phase F2
+
+### How we satisfied the software requirements
+
+- **F2.a:** The weather scenario was implemented by introducing a dynamic weather system that changes randomly at the start of each new day. This system supports three weather conditions: Sunny, Rainy, and Normal. Each condition influences the plants' growth by adjusting sunlight or water resources accordingly. A weather-specific emoji and descriptive text are displayed to notify the player of the current weather, ensuring an engaging and clear user experience. The victory condition was satisfied by requiring the player to collect 100 crops in their inventory. This condition is checked at the end of each game state update, and when achieved, a win message is displayed to the player, signifying successful completion of the game. This clear goal provides players with a sense of progression and accomplishment.
+- **F2.b:** To satisfy the requirement of implementing a domain-specific language (DSL) for defining plant types and their unique growth rules within the primary programming language used for the game, I introduced a structured and extensible system using TypeScript. The core of this implementation is the PlantType enum and associated data structures like PlantGrowthResources and the plantGridOffsetsThatMustBeFree dictionary. The PlantType enum acts as the DSL's foundation, categorizing plants into Circle, Triangle, and Square, each with specific growth rules. These rules are encoded as predicates within plantGridOffsetsThatMustBeFree, ensuring flexibility and clarity. This DSL defines how plants interact with their environment, such as requiring free diagonal neighbors for Circle plants, adjacent neighbors for Triangle plants, and all surrounding neighbors for Square plants. By leveraging TypeScript's strong typing and modularity, this DSL integrates seamlessly into the game's logic, ensuring each plant's growth rules are dynamically and consistently applied.
+- **F2.c:**
