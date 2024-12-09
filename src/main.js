@@ -1,6 +1,24 @@
 import "./style.css";
 
 /*
+ * Enums
+ */
+
+let Weather;
+(function (Weather) {
+  Weather["Sunny"] = "Sunny";
+  Weather["Rainy"] = "Rainy";
+  Weather["Normal"] = "Normal";
+})(Weather || (Weather = {}));
+
+let PlantType;
+(function (PlantType) {
+  PlantType["Circle"] = "Circle";
+  PlantType["Triangle"] = "Triangle";
+  PlantType["Square"] = "Square";
+})(PlantType || (PlantType = {}));
+
+/*
  * Util
  */
 
@@ -126,13 +144,6 @@ const gameStatus = document.getElementById("game-status");
 /*
  * Constants and constant-like globals
  */
-
-let PlantType;
-(function (PlantType) {
-  PlantType["Circle"] = "Circle";
-  PlantType["Triangle"] = "Triangle";
-  PlantType["Square"] = "Square";
-})(PlantType || (PlantType = {}));
 
 const ROWS = 10;
 const COLS = 12;
@@ -506,13 +517,6 @@ const plantTypesByNumber = [
   PlantType.Triangle,
   PlantType.Square,
 ];
-
-let Weather;
-(function (Weather) {
-  Weather["Sunny"] = "Sunny";
-  Weather["Rainy"] = "Rainy";
-  Weather["Normal"] = "Normal";
-})(Weather || (Weather = {}));
 
 function applyWeatherEffects() {
   switch (state.weather) {
