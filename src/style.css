@@ -159,7 +159,7 @@ header {
   }
 
   header {
-    height: 12vh;
+    height: 13vh;
   }
 
   main {
@@ -172,7 +172,7 @@ header {
 
   #game-wrapper {
     position: absolute;
-    top: 16vh;
+    top: 17vh;
     z-index: 1;
   }
 
