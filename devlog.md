@@ -55,6 +55,11 @@ https://gridfarmer.blujai831.dev
 
 I have personally confirmed it is possible to install the PWA from that page.
 
+### Reflection
+
+No major changes were required to implement F3 that have not already been
+discussed above.
+
 ## Project phase F2
 
 ### How we satisfied the software requirements
