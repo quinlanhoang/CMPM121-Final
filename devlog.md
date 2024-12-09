@@ -151,16 +151,7 @@ Here is how our thinking changed over time:
 
 ### Reflection
 
-> It would be very suspicious if you didn’t need to change anything.
-
-I find this phrasing confusing and a frankly little bit insulting. What exactly
-would be suspicious about it? If the requirements are fulfilled, then they're
-fulfilled, aren't they? It's not as if we can't read ahead and plan our
-project's structure from the very beginning according to changes that will have
-to be made in the far future, if we really want to. I don't see how that would
-in any way be intellectually dishonest.
-
-That being said, we did not do that, so of course there were changes of plans:
+Changes of plans:
 
 - Data representation changed from direct JS objects to proxy objects for an
   underlying byte array. This was a fairly high-effort change, but was
