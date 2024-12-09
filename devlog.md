@@ -34,7 +34,7 @@
   text was used directly were then changed to instead call `translate`.
 - **F3.b:** The game supports English, badly translated traditional Chinese, and
   badly translated Arabic. The translations were obtained using Google
-  Translate.
+  Translate. The user can select a language from the collapsible options menu.
 - **F3.c:** The game was made installable on Android by following the tutorial
   for PWA development linked in the assignment requirements (
   https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Tutorials/js13kGames/Installable_PWAs
