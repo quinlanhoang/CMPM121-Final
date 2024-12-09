@@ -153,15 +153,14 @@ let CELL_SIZE = 0;
 let CELL_PADDING = 0;
 let GRID_PADDING = 0;
 
-const undoStack = [new Uint8Array(MEMORY_SIZE)];
-const redoStack = [];
-
 /*
  * State management
  */
 
+const undoStack = [new Uint8Array(MEMORY_SIZE)];
+const redoStack = [];
+
 const state = {
-  weather: Weather.Normal,
   get saveSlot() {
     return parseInt(saveSlotInput.value);
   },
@@ -198,15 +197,32 @@ const state = {
       });
     },
   },
+  get weather() {
+    return u8ArrayGetEnum(lastMemory(), weathersByNumber, {
+      offset: 0x0001,
+      mask: 0b00001100,
+      shift: 2,
+    });
+  },
+  set weather(value) {
+    u8ArraySetEnum(lastMemory(), weathersByNumber, {
+      offset: 0x0001,
+      value,
+      mask: 0b00001100,
+      shift: 2,
+    });
+  },
   get selectedInventoryPlant() {
     return u8ArrayGetEnum(lastMemory(), plantTypesByNumber, {
       offset: 0x0001,
+      mask: 0b00000011,
     });
   },
   set selectedInventoryPlant(value) {
     u8ArraySetEnum(lastMemory(), plantTypesByNumber, {
       offset: 0x0001,
       value,
+      mask: 0b00000011,
     });
   },
   get day() {
@@ -465,15 +481,12 @@ function isAutosaveSlot(slot) {
 }
 
 function autosave() {
-  localStorage.setItem("currentWeather", state.weather);
   return saveGame(-1);
 }
 
 function loadAutosave() {
   const success = loadGame(-1);
   if (success) {
-    const savedWeather = localStorage.getItem("currentWeather");
-    state.weather = savedWeather || Weather.Normal;
     updateDayCounter();
     updatePlantHelp(state.grid(state.player.row, state.player.col));
   }
@@ -482,7 +495,6 @@ function loadAutosave() {
 
 function commitState() {
   autosave();
-  localStorage.setItem("currentWeather", state.weather);
   detectAndReportWin();
 }
 
@@ -516,6 +528,12 @@ const plantTypesByNumber = [
   PlantType.Circle,
   PlantType.Triangle,
   PlantType.Square,
+];
+
+const weathersByNumber = [
+  Weather.Normal,
+  Weather.Sunny,
+  Weather.Rainy,
 ];
 
 function applyWeatherEffects() {
@@ -1233,10 +1251,6 @@ function initializeGame() {
   initializeDayCount();
   initializePlayerPosition();
   resetStateStacks();
-  const savedWeather = localStorage.getItem("currentWeather");
-  state.weather = savedWeather || Weather.Normal;
-  console.log("Loaded weather state:", state.weather);
-
   autosave();
   updateDisplay();
   reportNewGame();
