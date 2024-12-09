@@ -155,7 +155,7 @@ header {
 @media (orientation: portrait) {
 
   body {
-    font-size: 0.8em;
+    font-size: 0.7em;
   }
 
   main {
@@ -174,7 +174,7 @@ header {
   #ui-box, #inventory-box {
     display: inline-block;
     width: 45vw;
-    height: 27vh;
+    height: 24vh;
     position: absolute;
     bottom: 0;
   }
