@@ -158,6 +158,10 @@ header {
     font-size: 0.7em;
   }
 
+  header {
+    height: 12vh;
+  }
+
   main {
     display: block;
   }
@@ -168,14 +172,14 @@ header {
 
   #game-wrapper {
     position: absolute;
-    top: 22vh;
+    top: 14vh;
     z-index: 1;
   }
 
   #ui-box, #inventory-box {
     display: inline-block;
     width: 45vw;
-    height: 25vh;
+    height: 32vh;
     position: absolute;
     bottom: 0;
   }
