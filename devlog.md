@@ -1,5 +1,62 @@
 # Devlog
 
+## Project phase F3
+
+### How we satisfied the software requirements
+
+
+- **F0.a:** Unchanged.
+- **F0.b:** Unchanged.
+- **F0.c:** Unchanged.
+- **F0.d:** Unchanged.
+- **F0.e:** Unchanged.
+- **F0.f:** Unchanged.
+- **F0.g:** Unchanged.
+- **F1.a:** Unchanged.
+- **F1.b:** Unchanged.
+- **F1.c:** Unchanged.
+- **F1.d:** Unchanged.
+- **F2.a:** Unchanged.
+- **F2.b:** Unchanged.
+- **F2.c:** The manner in which the code was organized and categorized
+  was lost in the transition to JavaScript. That organizational system
+  has since been reintroduced.
+- **F3.a:** Localizations are implemented as objects whose keys correspond
+  to individual situations where a message or label would be displayed,
+  and whose mapped values correspond to details on how, specifically,
+  to display the message or label. A mapped value may be either a string,
+  a function, or an object. The function `translate` then accepts a string
+  that should be a key common to all locale objects, accepts aribtrary
+  additional arguments, and consults the current locale object. If the key
+  is mapped to a string, that string is used unchanged. If the key is mapped
+  to a function, that function is called on the additional arguments,
+  and the result is used. If the key is mapped to an object, the additional
+  arguments are treated as a sequential key path, and the result of resolving
+  it is returned. All places where English text was used directly were then
+  changed to instead call `translate`.
+- **F3.b:** The game supports English, badly translated traditional Chinese,
+  and badly translated Arabic. The translations were obtained using Google
+  Translate.
+- **F3.c:** The game was made installable on Android by following the tutorial
+  for PWA development linked in the assignment requirements
+  ( https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Tutorials/js13kGames/Installable_PWAs ).
+  This process included writing a manifest file, linking it into the HTML,
+  and creating an icon.
+- **F3.d:** The game was made playable offline by following the tutorial
+  for PWA development linked in the assignment requirements. Specifically,
+  it involved adding a service worker to explicitly cache the game's files.
+
+I won't be able to complete the video portion of this assignment, so in lieu
+of demonstrating by video that the app can be installed on Android (and
+probably on iOS, I don't know, I didn't have the resources to test that)
+I instead task you with installing it yourself, disconnecting from the
+internet, and observing that it still works. As required for PWA installation
+to be allowed, I am serving the app over HTTPS on my VPN:
+
+https://gridfarmer.blujai831.dev
+
+I have personally confirmed it is possible to install the PWA from that page.
+
 ## Project phase F2
 
 ### How we satisfied the software requirements
