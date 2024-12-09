@@ -1011,6 +1011,7 @@ function detectAndReportWin() {
 }
 
 function updateDisplay() {
+  recalculateDimensions();
   updateInventoryUI();
   updateDayCounter();
   const cell = getCell(state.player.row, state.player.col);
@@ -1242,7 +1243,6 @@ function resetStateStacks() {
 
 function initializeGame() {
   initializeGrid();
-  recalculateDimensions();
   grantInitialSeeds();
   initializeDayCount();
   initializePlayerPosition();
@@ -1255,7 +1255,6 @@ function initializeGame() {
 
 function initializeApp() {
   initializeEvents();
-  recalculateDimensions();
   const hasAutosave = localStorage.getItem("saveSlot-1");
   if (hasAutosave) {
     loadAutosave();
