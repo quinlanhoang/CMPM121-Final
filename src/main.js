@@ -215,7 +215,8 @@ addLocale({
   undoButton: "Undo",
   redoButton: "Redo",
   inventoryHeading: "Inventory",
-  inventoryItemButton: (item, quantity) => `${item}: ${quantity}`,
+  inventoryItemButton: (item, quantity) =>
+    `${translate("plantTypes", item)}: ${quantity}`,
   plantHelpHeading: "Plant Help",
   weatherDescriptions: {
     [Weather.Normal]: "It's a normal day.",
@@ -277,6 +278,222 @@ addLocale({
   undoFail: "This is the first game state.",
   redoSuccess: "Restored future game state.",
   redoFail: "This is the last game state.",
+});
+
+addLocale({
+  lang: "中文翻譯得不好",
+  gameTitle: "網格農夫",
+  weathers: {
+    [Weather.Normal]: "多雲",
+    [Weather.Sunny]: "陽光明媚",
+    [Weather.Rainy]: "下雨天",
+  },
+  weatherIcons: {
+    [Weather.Sunny]: "🌞",
+    [Weather.Rainy]: "🌧️",
+    [Weather.Normal]: "🌤️",
+  },
+  plantTypes: {
+    [null]: "無植物",
+    [PlantType.Circle]: "圓圈",
+    [PlantType.Triangle]: "三角形",
+    [PlantType.Square]: "方塊",
+  },
+  plantGrowthLevels: {
+    [null]: "不適用",
+    1: "1",
+    2: "2",
+    3: "3",
+  },
+  [true]: "是的",
+  [false]: "不",
+  dayCounter: (day, weather) => `第 ${day} 天 ${translate("weatherIcons", weather)}`,
+  plantDetailsHeading: "植物細節",
+  plantTypeSummary: (type) =>
+    `植物類型: ${translate("plantTypes", type)}`,
+  plantGrowthSummary: (growth) =>
+    `植物生長水平: ${translate("plantGrowthLevels", growth)}`,
+  cellWaterSummary: (water) => `水分: ${water}/100`,
+  cellSunSummary: (sun) => `陽光: ${sun}/100`,
+  canGrowSummary: (yn) => `能否成長: ${translate(yn)}`,
+  reapButton: "收割",
+  sowButton: "播種",
+  nextDayButton: "去第二天",
+  optionsHeading: "配置",
+  localeLabel: "語言環境",
+  saveSlotLabel: "保存槽",
+  saveButton: "保存遊戲",
+  loadButton: "載入遊戲",
+  eraseSaveButton: "刪除",
+  newGameButton: "重新開始",
+  undoButton: "撤銷",
+  redoButton: "重做",
+  inventoryHeading: "存貨",
+  inventoryItemButton: (item, quantity) =>
+    `${translate("plantTypes", item)}: ${quantity}`,
+  plantHelpHeading: "植物細節",
+  weatherDescriptions: {
+    [Weather.Normal]: "今天天氣正常.",
+    [Weather.Sunny]: "這是一個陽光明媚的日子! 你的植物正在吸收額外的陽光.",
+    [Weather.Rainy]: "這是一個下雨天! 你的植物正在獲得額外的水.",
+  },
+  plantTypeDescriptions: {
+    [null]: "這裡沒有農作物.",
+    [PlantType.Circle]: "如果對角相鄰的地塊被佔據, 圓形植物就無法生長.",
+    [PlantType.Triangle]: "如果基本上相鄰的地塊都被佔用, 三角形植物就無法生長.",
+    [PlantType.Square]: "如果周圍的土地被佔用, 方形植物就無法生長.",
+  },
+  plantGrowthDescriptions: {
+    1: "1 級植物至少需要 50 水和 50 陽光.",
+    2: "2 級植物至少需要 75 水和 75 陽光.",
+    3: "該植物已達到生長極限, 必須收穫.",
+  },
+  cellResourcesDescription: (water, sun) =>
+    `這個地方有 ${water} 水和 ${sun} 陽光.`,
+  willGrowDescription: "這種植物今天就會生長!",
+  willNotGrowDescription: "這種植物今天不會生長.",
+  intro:
+    "你就是那個黑點. 按一下相鄰的網格單元即可移動到該單元格.<br />" +
+    "要播種種子, 請在庫存中按一下它, 然後按一下「播種」.<br />" +
+    "要收割作物, 請移動到與其相同的網格單元格, 然後按一下「收割」.<br />" +
+    "您被要求準備一批 100 種農作物.<br />" +
+    "您的目標是將足夠的農作物收集到您的庫存中, 以便準備好出貨.",
+  moveSuccess: (row, col) => `移至儲存格 ${row},${col}.`,
+  moveFail: "那裡不能動.",
+  reapSuccess: (type, growth) =>
+    `收穫 ${translate("plantGrowthLevels", growth)} 級${translate("plantTypes", type)}植物.`,
+  reapSuccessOOB: "以某種方式在某處收穫了一些植物. 事實上，我們不知道收穫的是哪一種植物，這是一個小故障.",
+  reapFail: "這裡沒有農作物.",
+  sowSuccess: (type) => `種植了${translate("plantTypes", type)}植物.`,
+  sowFailOOB: "超出範圍時無法播種. 你不應該出界. 這是一個故障.",
+  sowFailNoSelection: "您還沒有選擇要播種的種子. (提示: 點擊庫存中的種子類型.)",
+  sowFailOccupied: "這裡已經有莊稼了. (提示: 試著收穫它.)",
+  sowFailNoSeeds: (type) =>
+    `您目前沒有${translate("plantTypes", type)}形式的種子.`,
+  sowFailLogicError: "你應該能夠種下種子. 事實上, 您不能這樣做是一個故障, 或者失敗訊息功能已經過時.",
+  nextDay: "日子過去了.",
+  win: "你贏了! 您已準備好所要求的 100 種農作物的發貨.",
+  newGame: "正在玩新遊戲 (尚未儲存或載入).",
+  loadSuccess: "遊戲已載入.",
+  loadFail: "該插槽中似乎沒有已儲存的遊戲.",
+  saveSuccess: "遊戲已儲存.",
+  saveFail: "無法保存遊戲. 檢查頁面是否有localStorage權限.",
+  askToEraseGame: (slot) => `真的刪除保存槽${slot}嗎?`,
+  eraseSuccess: "儲存資料已刪除.",
+  eraseFail: "無法刪除已儲存的遊戲. 檢查頁面是否有localStorage權限.",
+  eraseRedundant: "此插槽不包含要清除的保存資料.",
+  undoSuccess: "恢復到之前的遊戲狀態.",
+  undoFail: "無法撤銷第一個遊戲狀態.",
+  redoSuccess: "恢復了後來的遊戲狀態.",
+  redoFail: "無法快轉超出最近的遊戲狀態.",
+});
+
+addLocale({
+  lang: "ترجمة سيئة للعربية",
+  gameTitle: "مزارع الشبكة",
+  weathers: {
+    [Weather.Normal]: "غائم",
+    [Weather.Sunny]: "مشمس",
+    [Weather.Rainy]: "ممطر",
+  },
+  weatherIcons: {
+    [Weather.Sunny]: "🌞",
+    [Weather.Rainy]: "🌧️",
+    [Weather.Normal]: "🌤️",
+  },
+  plantTypes: {
+    [null]: "لا يوجد محصول",
+    [PlantType.Circle]: "دائرة",
+    [PlantType.Triangle]: "مثلث",
+    [PlantType.Square]: "مربع",
+  },
+  plantGrowthLevels: {
+    [null]: "غير قابل للتطبيق",
+    1: "1",
+    2: "2",
+    3: "3",
+  },
+  [true]: "نعم",
+  [false]: "لا",
+  dayCounter: (day, weather) => `${translate("weatherIcons", weather)} ${day} اليوم `,
+  plantDetailsHeading: "تفاصيل المحصول",
+  plantTypeSummary: (type) =>
+    `النوع: ${translate("plantTypes", type)}`,
+  plantGrowthSummary: (growth) =>
+    `مستوى النمو: ${translate("plantGrowthLevels", growth)}`,
+  cellWaterSummary: (water) => `الماء: ${water}/100`,
+  cellSunSummary: (sun) => `الشمس: ${sun}/100`,
+  canGrowSummary: (yn) => `يمكن أن تنمو: ${translate(yn)}`,
+  reapButton: "محصول",
+  sowButton: "زرع البذور",
+  nextDayButton: "اليوم التالي",
+  optionsHeading: "إعدادات",
+  localeLabel: "لغة",
+  saveSlotLabel: "حفظ البيانات الفتحة",
+  saveButton: "احفظ بياناتك",
+  loadButton: "تحميل البيانات المحفوظة",
+  eraseSaveButton: "حذف البيانات",
+  newGameButton: "ابدأ من جديد",
+  undoButton: "التراجع",
+  redoButton: "تقدم سريع",
+  inventoryHeading: "المخزون",
+  inventoryItemButton: (item, quantity) =>
+    `${translate("plantTypes", item)}: ${quantity}`,
+  plantHelpHeading: "تفاصيل المحصول",
+  weatherDescriptions: {
+    [Weather.Normal]: "الطقس اليوم طبيعي.",
+    [Weather.Sunny]: "إنه يوم مشمس! نباتاتك تمتص المزيد من ضوء الشمس.",
+    [Weather.Rainy]: "إنه يوم ممطر! نباتاتك تحصل على كمية إضافية من الماء.",
+  },
+  plantTypeDescriptions: {
+    [null]: "لا يوجد نبات هنا.",
+    [PlantType.Circle]: "لا يمكن للنباتات الدائرية أن تنمو إذا كانت الأراضي المجاورة مشغولة قطريًا.",
+    [PlantType.Triangle]: "لا يمكن للنباتات المثلثية أن تنمو إذا كانت الأراضي المجاورة أفقياً أو رأسياً مشغولة.",
+    [PlantType.Square]: "لا يمكن للنباتات المربعة أن تنمو إذا كانت أي قطعة أرض محيطة بها مشغولة.",
+  },
+  plantGrowthDescriptions: {
+    1: "تتطلب نباتات المستوى 1 ما لا يقل عن 50 ماء و50 شمسًا.",
+    2: "تتطلب نباتات المستوى 2 ما لا يقل عن 75 ماء و75 شمسًا.",
+    3: "لقد وصل هذا النبات إلى الحد الأقصى لنموه ويجب حصاده.",
+  },
+  cellResourcesDescription: (water, sun) =>
+    `يحتوي هذا المكان على ${water} ماء و ${sun} شمس.`,
+  willGrowDescription: "هذا النبات سوف ينمو اليوم!",
+  willNotGrowDescription: "هذا النبات لن ينمو اليوم",
+  intro:
+    "أنت النقطة السوداء. انقر على خلية الشبكة المجاورة للانتقال إليها.<br />" +
+    "لزرع بذرة، انقر عليها في مخزونك، ثم انقر فوق \"زرع\".<br />" +
+    "لحصاد المحصول، انتقل إلى نفس خلية الشبكة التي يوجد بها المحصول، وانقر فوق \"حصاد\".<br />" +
+    "لقد طلب منك تحضير شحنة مكونة من 100 محصول.<br />" +
+    "هدفك هو جمع أكبر عدد ممكن من المحاصيل في مخزونك لتكون جاهزة للشحن.",
+  moveSuccess: (row, col) => `تم النقل إلى الخلية ${row},${col}.`,
+  moveFail: "لا يمكن التحرك هناك.",
+  reapSuccess: (type, growth) =>
+    `حصد نبات ${translate("plantTypes", type)} المستوى ${translate("plantGrowthLevels", growth)}.`,
+  reapSuccessOOB: "لقد حصدت بعض النباتات في مكان ما بطريقة ما. إن حقيقة أننا لا نعرف نوع النبات الذي تم حصاده هي خلل.",
+  reapFail: "لا يوجد محصول هنا.",
+  sowSuccess: (type) => `زرعت نباتًا من نوع ${translate("plantTypes", type)}.`,
+  sowFailOOB: "لا يمكنك زرع البذور أثناء وجودك خارج الحدود. يجب أن لا تكون خارج الحدود. هذا خلل.",
+  sowFailNoSelection: "لم تقم باختيار بذرة لزرعها. (تلميح: انقر على نوع البذرة في مخزونك.)",
+  sowFailOccupied: "يوجد بالفعل نبات هنا. (تلميح: حاول حصاده بدلاً من ذلك.)",
+  sowFailNoSeeds: (type) =>
+    `ليس لديك أي بذور ${translate("plantTypes", type)} في هذا الوقت.`,
+  sowFailLogicError: "كان من المفترض أن تتمكن من زرع البذرة. والحقيقة أنك لم تتمكن من ذلك هي خلل، أو أن وظيفة رسالة الفشل أصبحت قديمة.",
+  nextDay: "لقد وصل اليوم التالي.",
+  win: "لقد فزت! لقد قمت بإعداد الشحنة المطلوبة المكونة من 100 محصول.",
+  newGame: "اللعب في لعبة جديدة (لم يتم حفظها أو تحميلها بعد).",
+  loadSuccess: "تم تحميل اللعبة.",
+  loadFail: "يبدو أنه لا توجد لعبة محفوظة في هذه الفتحة.",
+  saveSuccess: "تم حفظ اللعبة.",
+  saveFail: "لم نتمكن من حفظ اللعبة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
+  askToEraseGame: (slot) => `هل تريد حقًا مسح فتحة الحفظ ${slot}؟`,
+  eraseSuccess: "تم مسح البيانات.",
+  eraseFail: "تعذر مسح اللعبة المحفوظة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
+  eraseRedundant: "لا يوجد هنا لعبة محفوظة لمسحها.",
+  undoSuccess: "تم التراجع عن الإجراء الأخير.",
+  undoFail: "لا يمكنك التراجع عن حالة اللعبة الأولي.",
+  redoSuccess: "إعادة التوجيه السريع إلى حالة اللعبة اللاحقة.",
+  redoFail: "لا يمكنك التقديم السريع بعد حالة اللعبة الأخيرة.",
 });
 
 function translate(key, ...args) {
@@ -1291,6 +1508,12 @@ function translateLabels() {
   redoButton.textContent = translate("redoButton");
 }
 
+function updateDisplayAfterChangingLocale() {
+  updateDisplay();
+  showTutorialMessage();
+  saveLoadSuccessMessage(translate("lang"));
+}
+
 /*
  * Initialization
  */
@@ -1328,6 +1551,7 @@ function initializeEvents() {
     "click",
     (e) => handleGridClicked(e.offsetX, e.offsetY),
   );
+  localeSelection.addEventListener("change", updateDisplayAfterChangingLocale);
 }
 
 function grantInitialSeeds() {
