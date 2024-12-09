@@ -445,6 +445,7 @@ function loadGame(slot) {
   if (saveData) {
     deserializeStateStacks(saveData);
     reportLoadSuccess();
+    updateDisplay();
     showTutorialMessage();
     return true;
   } else {
@@ -485,12 +486,7 @@ function autosave() {
 }
 
 function loadAutosave() {
-  const success = loadGame(-1);
-  if (success) {
-    updateDayCounter();
-    updatePlantHelp(state.grid(state.player.row, state.player.col));
-  }
-  return success;
+  return loadGame(-1);
 }
 
 function commitState() {
@@ -1259,18 +1255,13 @@ function initializeGame() {
 
 function initializeApp() {
   initializeEvents();
-
+  recalculateDimensions();
   const hasAutosave = localStorage.getItem("saveSlot-1");
   if (hasAutosave) {
     loadAutosave();
   } else {
     initializeGame();
   }
-
-  recalculateDimensions();
-  const currentCell = state.grid(state.player.row, state.player.col);
-  updatePlantHelp(currentCell);
-  draw();
 }
 
 initializeApp();
