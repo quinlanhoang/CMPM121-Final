@@ -122,26 +122,175 @@ function u8ArrayDuplicate(array) {
 
 const canvas = document.getElementById("game-grid");
 const ctx = canvas.getContext("2d");
+const titleDisplay = document.getElementById("title");
+const gameHeading = document.getElementById("game-heading");
+const gameStatus = document.getElementById("game-status");
 const dayCounterDisplay = document.getElementById("day-counter");
+const plantDetailsHeading = document.getElementById("plant-details-heading");
 const typeDisplay = document.getElementById("plant-type");
 const growthLevelDisplay = document.getElementById("plant-growth-level");
 const waterDisplay = document.getElementById("plant-water");
 const sunDisplay = document.getElementById("plant-sun");
 const canGrowDisplay = document.getElementById("plant-can-grow");
-const nextDayButton = document.getElementById("next-day-button");
-const sowButton = document.getElementById("sow-button");
 const reapButton = document.getElementById("reap-button");
-const inventoryContainer = document.getElementById("inventory-container");
-const plantHelpToolTip = document.getElementById("plant-help-tool-tip");
+const sowButton = document.getElementById("sow-button");
+const nextDayButton = document.getElementById("next-day-button");
+const optionsHeading = document.getElementById("options-heading");
+const localeLabel = document.getElementById("locale-label")
+const localeSelection = document.getElementById("locale");
+const saveSlotLabel = document.getElementById("save-slot-label");
 const saveSlotInput = document.getElementById("save-slot");
 const saveButton = document.getElementById("save-button");
 const loadButton = document.getElementById("load-button");
 const eraseSaveButton = document.getElementById("erase-save-button");
 const newGameButton = document.getElementById("new-game-button");
+const saveLoadStatus = document.getElementById("save-load-status");
 const undoButton = document.getElementById("undo-button");
 const redoButton = document.getElementById("redo-button");
-const saveLoadStatus = document.getElementById("save-load-status");
-const gameStatus = document.getElementById("game-status");
+const inventoryContainer = document.getElementById("inventory-container");
+const inventoryHeading = document.getElementById("inventory-heading");
+const plantHelpHeading = document.getElementById("plant-help-heading");
+const plantHelpToolTip = document.getElementById("plant-help-tool-tip");
+
+/*
+ * Localization
+ */
+
+const locales = [];
+
+function addLocale(locale) {
+  locales.push(locale);
+  localeSelection.innerHTML = "";
+  for (let i = 0; i < locales.length; i++) {
+    localeSelection.innerHTML += `<option value="${i}">${locales[i].lang}</option>`;
+  }
+}
+
+addLocale({
+  lang: "English",
+  gameTitle: "Grid Farmer",
+  weathers: {
+    [Weather.Normal]: "Normal",
+    [Weather.Sunny]: "Sunny",
+    [Weather.Rainy]: "Rainy",
+  },
+  weatherIcons: {
+    [Weather.Sunny]: "🌞",
+    [Weather.Rainy]: "🌧️",
+    [Weather.Normal]: "🌤️",
+  },
+  plantTypes: {
+    [null]: "None",
+    [PlantType.Circle]: "Circle",
+    [PlantType.Triangle]: "Triangle",
+    [PlantType.Square]: "Square",
+  },
+  plantGrowthLevels: {
+    [null]: "N/A",
+    1: "1",
+    2: "2",
+    3: "3",
+  },
+  [true]: "yes",
+  [false]: "no",
+  dayCounter: (day, weather) => `Day ${day} ${translate("weatherIcons", weather)}`,
+  plantDetailsHeading: "Plant Details",
+  plantTypeSummary: (type) =>
+    `Type: ${translate("plantTypes", type)}`,
+  plantGrowthSummary: (growth) =>
+    `Growth Level: ${translate("plantGrowthLevels", growth)}`,
+  cellWaterSummary: (water) => `Water: ${water}/100`,
+  cellSunSummary: (sun) => `Sun: ${sun}/100`,
+  canGrowSummary: (yn) => `Can Grow: ${translate(yn)}`,
+  reapButton: "Reap",
+  sowButton: "Sow",
+  nextDayButton: "Next Day",
+  optionsHeading: "Options",
+  localeLabel: "Locale",
+  saveSlotLabel: "Save slot",
+  saveButton: "Save",
+  loadButton: "Load",
+  eraseSaveButton: "Erase",
+  newGameButton: "New Game",
+  undoButton: "Undo",
+  redoButton: "Redo",
+  inventoryHeading: "Inventory",
+  inventoryItemButton: (item, quantity) => `${item}: ${quantity}`,
+  plantHelpHeading: "Plant Help",
+  weatherDescriptions: {
+    [Weather.Normal]: "It's a normal day.",
+    [Weather.Sunny]: "It's a sunny day! Your plants are soaking up extra sunlight.",
+    [Weather.Rainy]: "It's a rainy day! Your plants are getting extra water.",
+  },
+  plantTypeDescriptions: {
+    [null]: "No plant here.",
+    [PlantType.Circle]: "Circle plants cannot grow if diagonally adjacent plots are occupied.",
+    [PlantType.Triangle]: "Triangle plants cannot grow if cardinally adjacent plots are occupied.",
+    [PlantType.Square]: "Square plants cannot grow if any surrounding plots are occupied.",
+  },
+  plantGrowthDescriptions: {
+    1: "Level 1 plants require at least 50 water and 50 sun.",
+    2: "Level 2 plants require at least 75 water and 75 sun.",
+    3: "This plant has reached its growth limit and must be harvested.",
+  },
+  cellResourcesDescription: (water, sun) =>
+    `This spot has ${water} water and ${sun} sun.`,
+  willGrowDescription: "This plant will grow today!",
+  willNotGrowDescription: "This plant will not grow today.",
+  intro:
+    "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
+    "To sow a seed, click on it in your inventory, and then click \"Sow.\"<br />" +
+    "To reap a crop, move to the same grid cell as it, and click \"Reap.\"<br />" +
+    "You have been asked to prepare a shipment of 100 crops.<br />" +
+    "Your goal is to gather that many crops into your inventory to get them ready to ship.",
+  moveSuccess: (row, col) => `Moved to cell ${row},${col}.`,
+  moveFail: "Can't move there.",
+  reapSuccess: (type, growth) =>
+    `Reaped lv${translate("plantGrowthLevels", growth)} ${translate("plantTypes", type)} plant.`,
+  reapSuccessOOB: "Reaped some plant somewhere somehow. " +
+    "The fact that we don't know what kind of plant was reaped is a bug.",
+  reapFail: "No crop on this cell.",
+  sowSuccess: (type) => `Planted a ${translate("plantTypes", type)} plant.`,
+  sowFailOOB: "Can't sow while out of bounds. " +
+    "You should not be out of bounds. This is a bug.",
+  sowFailNoSelection: "You haven't selected anything to sow. " +
+    "(Hint: click on a seed type in your inventory.)",
+  sowFailOccupied: "There is already a plant here. " +
+    "(Hint: try reaping it instead.)",
+  sowFailNoSeeds: (type) =>
+    `You have no ${translate("plantTypes", type)} seeds at this time.`,
+  sowFailLogicError: "You should have been able to sow. " +
+    "The fact that you could not is a bug, " +
+    "or the fail message function is outdated.",
+  nextDay: "Advanced to the next day.",
+  win: "You win! You have prepared the requested shipment of 100 crops.",
+  newGame: "Playing on a new game (not yet saved or loaded).",
+  loadSuccess: "Game loaded.",
+  loadFail: "There does not seem to be a saved game in this slot.",
+  saveSuccess: "Game saved.",
+  saveFail: "Could not save the game. Check if the page has localStorage permission.",
+  askToEraseGame: (slot) => `Really erase save slot ${slot}?`,
+  eraseSuccess: "Game erased.",
+  eraseFail: "Could not erase the saved game. Check if the page has localStorage permission.",
+  eraseRedundant: "There is no saved game here to erase.",
+  undoSuccess: "Reverted to previous game state.",
+  undoFail: "This is the first game state.",
+  redoSuccess: "Restored future game state.",
+  redoFail: "This is the last game state.",
+});
+
+function translate(key, ...args) {
+  const locale = locales[parseInt(localeSelection.value)];
+  let translation = locale[key] || key;
+  if (typeof(translation) === "function") {
+    translation = translation(...args);
+  } else if (typeof(translation) === "object") {
+    for (const subkey of args) {
+      translation = translation[subkey];
+    }
+  }
+  return translation;
+}
 
 /*
  * Constants and constant-like globals
@@ -871,7 +1020,8 @@ function updateInventoryUI() {
   inventoryContainer.innerHTML = "";
   Object.keys(state.inventory).forEach((plantType) => {
     const li = document.createElement("li");
-    li.textContent = `${plantType}: ${state.inventory[plantType]}`;
+    li.textContent =
+      translate("inventoryItemButton", plantType, state.inventory[plantType]);
     li.onclick = () => {
       state.selectedInventoryPlant = plantType;
       updateInventoryUI();
@@ -884,69 +1034,31 @@ function updateInventoryUI() {
 }
 
 function updatePlantHelp(cell) {
-  const weatherMessages = {
-    [Weather.Sunny]:
-      "It's a sunny day! Your plants are soaking up extra sunlight.",
-    [Weather.Rainy]: "It's a rainy day! Your plants are getting extra water.",
-    [Weather.Normal]: "It's a normal day.",
-  };
-  const weatherMessage = weatherMessages[state.weather];
-  let plantMessage = "No plant here.\n";
+  const weatherMessage = translate("weatherDescriptions", state.weather);
+  let plantMessage = translate("plantTypeDescriptions", cell.plant?.type || null);
   if (cell.plant) {
-    switch (cell.plant.type) {
-      case PlantType.Circle:
-        plantMessage =
-          "Circle plants cannot grow if diagonal plots are occupied.\n";
-        break;
-      case PlantType.Triangle:
-        plantMessage =
-          "Triangle plants cannot grow if adjacent plots are occupied.\n";
-        break;
-      case PlantType.Square:
-        plantMessage =
-          "Square plants cannot grow if surrounding plots are occupied.\n";
-        break;
-    }
-    switch (cell.plant.growth) {
-      case 1:
-        plantMessage +=
-          "Level 1 plants require at least 50 water and 50 sun.\n";
-        break;
-      case 2:
-        plantMessage +=
-          "Level 2 plants require at least 75 water and 75 sun.\n";
-        break;
-      case 3:
-        plantMessage +=
-          "This plant has reached its growth limit and must be harvested.\n";
-        break;
-    }
-    plantMessage += `This spot has ${cell.water} water and ${cell.sun} sun.\n`;
+    plantMessage += " " + translate("plantGrowthDescriptions", cell.plant.growth);
+  }
+  plantMessage += " " + translate("cellResourcesDescription", cell.water, cell.sun);
+  if (cell.plant) {
+    plantMessage += " " + translate("plantGrowthDescriptions", cell.plant.growth);
     if (plantCanGrow(cell)) {
-      plantMessage += "This plant will grow today!\n";
+      plantMessage += " " + translate("willGrowDescription");
     } else {
-      plantMessage += "This plant will not grow today.\n";
+      plantMessage += " " + translate("willNotGrowDescription");
     }
   }
-  plantHelpToolTip.textContent = `${weatherMessage}\n\n${plantMessage}`;
+  plantHelpToolTip.textContent = `${weatherMessage} ${plantMessage}`;
 }
 
 function updatePlantSummary(cell) {
-  let _a, _b;
-  typeDisplay.textContent =
-    ((_a = cell.plant) === null || _a === void 0 ? void 0 : _a.type) || "None";
-  growthLevelDisplay.textContent = `${
-    ((_b = cell.plant) === null || _b === void 0 ? void 0 : _b.growth) || 0
-  }`;
-  waterDisplay.textContent = `${cell.water}`;
-  sunDisplay.textContent = `${cell.sun}`;
-  if (plantCanGrow(cell)) {
-    canGrowDisplay.textContent = "yes";
-    canGrowDisplay.className = "success";
-  } else {
-    canGrowDisplay.textContent = "no";
-    canGrowDisplay.className = "fail";
-  }
+  typeDisplay.textContent = translate("plantTypeSummary", cell.plant?.type || null);
+  growthLevelDisplay.textContent = translate("plantGrowthSummary", cell.plant?.growth || null);
+  waterDisplay.textContent = translate("cellWaterSummary", cell.water);
+  sunDisplay.textContent = translate("cellSunSummary", cell.sun);
+  const canGrow = plantCanGrow(cell);
+  canGrowDisplay.textContent = translate("canGrowSummary", canGrow);
+  canGrowDisplay.className = canGrow ? "success" : "fail";
 }
 
 function handleGridClicked(x, y) {
@@ -999,15 +1111,8 @@ function handleKey(key) {
 }
 
 function updateDayCounter() {
-  const weatherEmoji = {
-    [Weather.Sunny]: "🌞",
-    [Weather.Rainy]: "🌧️",
-    [Weather.Normal]: "🌤️",
-  };
-
-  dayCounterDisplay.innerHTML = `Day ${state.day} ${
-    weatherEmoji[state.weather]
-  }`;
+  dayCounterDisplay.innerHTML =
+    translate("dayCounter", state.day, state.weather);
 }
 
 function detectAndReportWin() {
@@ -1016,7 +1121,7 @@ function detectAndReportWin() {
     const hadAlreadyWon = gameWon();
     redo();
     if (!hadAlreadyWon) {
-      alert("You win! You have prepared the requested shipment of 100 crops.");
+      alert(translate("win"));
     }
   }
 }
@@ -1030,6 +1135,7 @@ function updateDisplay() {
     updatePlantSummary(cell);
     updatePlantHelp(cell);
   }
+  translateLabels();
   draw();
 }
 
@@ -1064,133 +1170,125 @@ function failMessage(what) {
 }
 
 function reportLoadFail() {
-  saveLoadFailMessage("There does not seem to be a saved game in this slot.");
+  saveLoadFailMessage(translate("loadFail"));
 }
 
 function reportLoadSuccess() {
-  saveLoadSuccessMessage("Game loaded.");
+  saveLoadSuccessMessage(translate("loadSuccess"));
 }
 
 function reportSaveFail() {
-  saveLoadFailMessage(
-    "Could not save the game. Check if the page has localStorage permission.",
-  );
+  saveLoadFailMessage(translate("saveFail"));
 }
 
 function reportSaveSuccess() {
-  saveLoadSuccessMessage("Game saved.");
+  saveLoadSuccessMessage(translate("saveSuccess"));
 }
 
 function askToEraseGame() {
-  if (confirm(`Really erase save slot ${state.saveSlot}?`)) {
+  if (confirm(translate("askToEraseGame", state.saveSlot))) {
     eraseGame();
   }
 }
 
 function reportEraseFail() {
-  saveLoadFailMessage(
-    "Could not erase the saved game. Check if the page has localStorage permission.",
-  );
+  saveLoadFailMessage(translate("eraseFail"));
 }
 
 function reportEraseRedundant() {
-  saveLoadFailMessage("There is no saved game here to erase.");
+  saveLoadFailMessage(translate("eraseRedundant"));
 }
 
 function reportEraseSuccess() {
-  saveLoadSuccessMessage("Game erased.");
+  saveLoadSuccessMessage(translate("eraseSuccess"));
 }
 
 function reportUndoSuccess() {
-  successMessage("Reverted to previous game state.");
+  successMessage(translate("undoSuccess"));
 }
 
 function reportUndoFail() {
-  failMessage("This is the first game state.");
+  failMessage(translate("undoFail"));
 }
 
 function reportRedoSuccess() {
-  successMessage("Restored future game state.");
+  successMessage(translate("redoSuccess"));
 }
 
 function reportRedoFail() {
-  failMessage("This is the last game state.");
+  failMessage(translate("redoFail"));
 }
 
 function showTutorialMessage() {
-  neutralMessage(
-    "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
-      'To sow a seed, click on it in your inventory, and then click "Sow."<br />' +
-      'To reap a crop, move to the same grid cell as it, and click "Reap."<br />' +
-      "You have been asked to prepare a shipment of 100 crops.<br />" +
-      "Your goal is to gather that many crops into your inventory to get them ready to ship.",
-  );
+  neutralMessage(translate("intro"));
 }
 
 function showMoveFail() {
-  failMessage("Can't move there.");
+  failMessage(translate("moveFail"));
 }
 
 function showMoveSuccess() {
-  successMessage(`Moved to cell ${state.player.row},${state.player.col}.`);
+  successMessage(translate("moveSuccess", state.player.row, state.player.col));
 }
 
 function showReapFail() {
-  failMessage("No crop on this cell.");
+  failMessage(translate("reapFail"));
 }
 
 function showReapSuccess() {
   const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant) {
-    successMessage(`Reaped lv${cell.plant.growth} ${cell.plant.type} plant.`);
+    successMessage(translate("reapSuccess", cell.plant.type, cell.plant.growth));
   } else {
-    failMessage(
-      "Reaped some plant somewhere somehow. " +
-        "The fact that we don't know what kind of plant was reaped is a bug.",
-    );
+    failMessage(translate("reapSuccessOOB"));
   }
 }
 
 function showSowFail() {
   const cell = getCell(state.player.row, state.player.col);
   if (!cell) {
-    failMessage(
-      "Can't sow while out of bounds. " +
-        "You should not even be out of bounds. This is a bug.",
-    );
+    failMessage(translate("sowFailOOB"));
   } else if (!state.selectedInventoryPlant) {
-    failMessage(
-      "You haven't selected anything to sow. " +
-        "(Hint: click on a seed type in your inventory.)",
-    );
+    failMessage(translate("sowFailNoSelection"));
   } else if (cell.plant) {
-    failMessage(
-      "There is already a plant here. " +
-        "(Hint: try reaping it instead.)",
-    );
+    failMessage(translate("sowFailOccupied"));
   } else if (state.inventory[state.selectedInventoryPlant] <= 0) {
-    failMessage(
-      `You have no ${state.selectedInventoryPlant} seeds at this time.`,
-    );
+    failMessage(translate("sowFailNoSeeds", state.selectedInventoryPlant));
   } else {
-    failMessage(
-      "You should have been able to sow. " +
-        "The fact that you could not is a bug, " +
-        "or this fail message function is outdated.",
-    );
+    failMessage(translate("sowFailLogicError"));
   }
 }
 
 function showSowSuccess() {
-  successMessage(`Planted a ${state.selectedInventoryPlant} plant.`);
+  successMessage(translate("sowSuccess", state.selectedInventoryPlant));
 }
 
 function reportNewGame() {
-  saveLoadNeutralMessage("Playing on a new game (not yet saved or loaded).");
+  saveLoadNeutralMessage(translate("newGame"));
 }
 
 function reportNextDay() {
-  successMessage("Advanced to the next day.");
+  successMessage(translate("nextDay"));
+}
+
+function translateLabels() {
+  titleDisplay.textContent = translate("gameTitle");
+  gameHeading.textContent = translate("gameTitle");
+  plantDetailsHeading.textContent = translate("plantDetailsHeading");
+  optionsHeading.textContent = translate("optionsHeading");
+  localeLabel.textContent = translate("localeLabel");
+  saveSlotLabel.textContent = translate("saveSlotLabel");
+  inventoryHeading.textContent = translate("inventoryHeading");
+  plantHelpHeading.textContent = translate("plantHelpHeading");
+  reapButton.textContent = translate("reapButton");
+  sowButton.textContent = translate("sowButton");
+  nextDayButton.textContent = translate("nextDayButton");
+  saveButton.textContent = translate("saveButton");
+  loadButton.textContent = translate("loadButton");
+  newGameButton.textContent = translate("newGameButton");
+  eraseSaveButton.textContent = translate("eraseSaveButton");
+  undoButton.textContent = translate("undoButton");
+  redoButton.textContent = translate("redoButton");
 }
 
 /*
