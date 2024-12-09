@@ -188,12 +188,12 @@ header {
     right: 0;
   }
 
-  #ui-box p {
-    margin: 0;
-  }
-
   #inventory-box li {
     padding: 3px;
+  }
+
+  p, h1, h2, h3 {
+    margin: 0;
   }
 
 }
