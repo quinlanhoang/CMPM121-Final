@@ -175,7 +175,7 @@ header {
   #ui-box, #inventory-box {
     display: inline-block;
     width: 45vw;
-    height: 32vh;
+    height: 25vh;
     position: absolute;
     bottom: 0;
   }
@@ -190,6 +190,10 @@ header {
 
   #ui-box p {
     margin: 0;
+  }
+
+  #inventory-box li {
+    padding: 3px;
   }
 
 }
