@@ -169,12 +169,13 @@ header {
   #game-wrapper {
     position: absolute;
     top: 20vh;
+    z-index: 1;
   }
 
   #ui-box, #inventory-box {
     display: inline-block;
     width: 45vw;
-    height: 24vh;
+    height: 27vh;
     position: absolute;
     bottom: 0;
   }
