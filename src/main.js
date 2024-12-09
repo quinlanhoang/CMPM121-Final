@@ -1,4 +1,6 @@
-import "./style.css";
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/src/sw.js");
+}
 
 /*
  * Enums

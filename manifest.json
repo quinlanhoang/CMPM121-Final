@@ -1,0 +1,15 @@
+{
+  "name": "Grid Farmer",
+  "short_name": "GridFarmer",
+  "description": "Barebones farming sim developed for a school assignment",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone"
+}
