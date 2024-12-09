@@ -1,5 +1,10 @@
 # CMPM121-Final
 
+## Link to the game
+
+The project is now finished and hosted online at the following address:
+https://gridfarmer.blujai831.dev
+
 ## Team Introduction
 
 Tools Lead: Jaime McCann
