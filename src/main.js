@@ -726,10 +726,19 @@ function recalculateDimensions() {
   const MIN_PADDING = 10;
   const MAX_PADDING = 30;
 
-  const maxSize = Math.min(
-    globalThis.innerWidth * 0.6,
-    globalThis.innerHeight * 0.8,
-  );
+  let maxSize;
+  if (globalThis.innerWidth > globalThis.innerHeight) {
+    maxSize = Math.min(
+      globalThis.innerWidth * 0.6,
+      globalThis.innerHeight * 0.8,
+    );
+  } else {
+    maxSize = Math.min(
+      globalThis.innerWidth,
+      globalThis.innerHeight * 0.6,
+    );
+  }
+
   CELL_SIZE = Math.floor(maxSize / Math.max(ROWS, COLS)) * 0.8;
   CELL_PADDING = Math.floor(CELL_SIZE * 0.2);
   GRID_PADDING = Math.min(MAX_PADDING, Math.max(MIN_PADDING, CELL_PADDING * 2));

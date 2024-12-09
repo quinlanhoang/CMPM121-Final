@@ -1,7 +1,5 @@
 body {
   margin: 0;
-  display: flex;
-  flex-direction: column;
   height: 100vh;
   background-color: #6b8e23;
   font-family: Arial, sans-serif;
@@ -13,11 +11,6 @@ header {
   color: white;
   padding: 15px;
   font-size: 24px;
-}
-
-main {
-  display: flex;
-  flex: 1;
 }
 
 #ui-box, #inventory-box {
@@ -32,39 +25,28 @@ main {
   border-right: 2px solid #ddd;
 }
 
-#inventory-box {
-  border-left: 2px solid #ddd;
-  display: flex;
-  flex-direction: column;
-}
-
 #inventory-container {
-  flex: 1;
   padding: 0;
   list-style: none;
   overflow-y: auto;
   margin-bottom: 10px;
 }
 
+#inventory-box {
+  border-left: 2px solid #ddd;
+}
+
 #plant-help {
-  flex: 1;
   background-color: #ffffe0;
   border: 1px solid #ddd;
   padding: 10px;
   font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   box-shadow: inset 0px 5px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Inventory List Items */
 #inventory-container li {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
   margin: 5px 0;
+  padding: 10px;
   border: 1px solid black;
   cursor: pointer;
   text-align: center;
@@ -80,24 +62,9 @@ main {
   font-weight: bold; /* make selected plant stand out */
 }
 
-/* Game Canvas */
-#game-wrapper {
-  flex: 1; /* fill remaining space dynamically */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 canvas {
   background-color: #3e2300;
   border: 1px solid black;
-}
-
-#day-counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2em;
 }
 
 .success {
@@ -126,6 +93,102 @@ summary:hover {
 }
 
 header {
-  height: 12em;
+  height: 20vh;
   font-size: 100%;
+}
+
+#day-counter {
+  font-size: 1.2em;
+}
+
+@media (orientation: landscape) {
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  main {
+    display: flex;
+    flex: 1;
+  }
+  
+  #inventory-box {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  #inventory-container {
+    flex: 1;
+  }
+  
+  #plant-help {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Inventory List Items */
+  #inventory-container li {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  /* Game Canvas */
+  #game-wrapper {
+    flex: 1; /* fill remaining space dynamically */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  #day-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+}
+
+@media (orientation: portrait) {
+
+  body {
+    font-size: 0.8em;
+  }
+
+  main {
+    display: block;
+  }
+
+  #inventory-container li {
+    display: inline-block;
+  }
+
+  #game-wrapper {
+    position: absolute;
+    top: 20vh;
+  }
+
+  #ui-box, #inventory-box {
+    display: inline-block;
+    width: 45vw;
+    height: 27vh;
+    position: absolute;
+    bottom: 0;
+  }
+
+  #ui-box {
+    left: 0;
+  }
+
+  #inventory-box {
+    right: 0;
+  }
+
+  #ui-box p {
+    margin: 0;
+  }
+
 }
