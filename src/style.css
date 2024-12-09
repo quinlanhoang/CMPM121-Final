@@ -102,26 +102,25 @@ header {
 }
 
 @media (orientation: landscape) {
-
   body {
     display: flex;
     flex-direction: column;
   }
-  
+
   main {
     display: flex;
     flex: 1;
   }
-  
+
   #inventory-box {
     display: flex;
     flex-direction: column;
   }
-  
+
   #inventory-container {
     flex: 1;
   }
-  
+
   #plant-help {
     flex: 1;
     display: flex;
@@ -129,13 +128,13 @@ header {
     justify-content: center;
     align-items: center;
   }
-  
+
   /* Inventory List Items */
   #inventory-container li {
     display: flex;
     justify-content: space-between;
   }
-  
+
   /* Game Canvas */
   #game-wrapper {
     flex: 1; /* fill remaining space dynamically */
@@ -143,17 +142,15 @@ header {
     justify-content: center;
     align-items: center;
   }
-  
+
   #day-counter {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-
 }
 
 @media (orientation: portrait) {
-
   body {
     font-size: 0.7em;
   }
@@ -199,5 +196,4 @@ header {
   p, h1, h2, h3 {
     margin: 0;
   }
-
 }

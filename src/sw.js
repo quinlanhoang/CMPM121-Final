@@ -3,7 +3,7 @@ const cacheData = [
   "/src/main.js",
   "/src/style.css",
   "/icon.svg",
-  "/index.html"
+  "/index.html",
 ];
 
 self.addEventListener("install", (e) => {
@@ -24,7 +24,9 @@ self.addEventListener("fetch", (e) => {
     if (response && response.ok) {
       console.log(`[Service Worker] File ${e.request.url} already cached`);
     } else {
-      console.log(`[Service Worker] Fetching file ${e.request.url} from remote`);
+      console.log(
+        `[Service Worker] Fetching file ${e.request.url} from remote`,
+      );
       response = await fetch(e.request);
       if (response && response.ok) {
         console.log(`[Service Worker] Opening cache`);
@@ -40,11 +42,11 @@ self.addEventListener("fetch", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil((async () => {
+  e.waitUntil(async () => {
     for (const key of await caches.keys()) {
       if (key !== cacheName) {
         caches.delete(key);
       }
     }
-  }));
+  });
 });

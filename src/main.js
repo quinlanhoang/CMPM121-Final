@@ -136,7 +136,7 @@ const reapButton = document.getElementById("reap-button");
 const sowButton = document.getElementById("sow-button");
 const nextDayButton = document.getElementById("next-day-button");
 const optionsHeading = document.getElementById("options-heading");
-const localeLabel = document.getElementById("locale-label")
+const localeLabel = document.getElementById("locale-label");
 const localeSelection = document.getElementById("locale");
 const saveSlotLabel = document.getElementById("save-slot-label");
 const saveSlotInput = document.getElementById("save-slot");
@@ -162,7 +162,9 @@ function addLocale(locale) {
   locales.push(locale);
   localeSelection.innerHTML = "";
   for (let i = 0; i < locales.length; i++) {
-    localeSelection.innerHTML += `<option value="${i}">${locales[i].lang}</option>`;
+    localeSelection.innerHTML += `<option value="${i}">${
+      locales[i].lang
+    }</option>`;
   }
 }
 
@@ -193,10 +195,10 @@ addLocale({
   },
   [true]: "yes",
   [false]: "no",
-  dayCounter: (day, weather) => `Day ${day} ${translate("weatherIcons", weather)}`,
+  dayCounter: (day, weather) =>
+    `Day ${day} ${translate("weatherIcons", weather)}`,
   plantDetailsHeading: "Plant Details",
-  plantTypeSummary: (type) =>
-    `Type: ${translate("plantTypes", type)}`,
+  plantTypeSummary: (type) => `Type: ${translate("plantTypes", type)}`,
   plantGrowthSummary: (growth) =>
     `Growth Level: ${translate("plantGrowthLevels", growth)}`,
   cellWaterSummary: (water) => `Water: ${water}/100`,
@@ -220,14 +222,18 @@ addLocale({
   plantHelpHeading: "Plant Help",
   weatherDescriptions: {
     [Weather.Normal]: "It's a normal day.",
-    [Weather.Sunny]: "It's a sunny day! Your plants are soaking up extra sunlight.",
+    [Weather.Sunny]:
+      "It's a sunny day! Your plants are soaking up extra sunlight.",
     [Weather.Rainy]: "It's a rainy day! Your plants are getting extra water.",
   },
   plantTypeDescriptions: {
     [null]: "No plant here.",
-    [PlantType.Circle]: "Circle plants cannot grow if diagonally adjacent plots are occupied.",
-    [PlantType.Triangle]: "Triangle plants cannot grow if cardinally adjacent plots are occupied.",
-    [PlantType.Square]: "Square plants cannot grow if any surrounding plots are occupied.",
+    [PlantType.Circle]:
+      "Circle plants cannot grow if diagonally adjacent plots are occupied.",
+    [PlantType.Triangle]:
+      "Triangle plants cannot grow if cardinally adjacent plots are occupied.",
+    [PlantType.Square]:
+      "Square plants cannot grow if any surrounding plots are occupied.",
   },
   plantGrowthDescriptions: {
     1: "Level 1 plants require at least 50 water and 50 sun.",
@@ -240,14 +246,16 @@ addLocale({
   willNotGrowDescription: "This plant will not grow today.",
   intro:
     "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
-    "To sow a seed, click on it in your inventory, and then click \"Sow.\"<br />" +
-    "To reap a crop, move to the same grid cell as it, and click \"Reap.\"<br />" +
+    'To sow a seed, click on it in your inventory, and then click "Sow."<br />' +
+    'To reap a crop, move to the same grid cell as it, and click "Reap."<br />' +
     "You have been asked to prepare a shipment of 100 crops.<br />" +
     "Your goal is to gather that many crops into your inventory to get them ready to ship.",
   moveSuccess: (row, col) => `Moved to cell ${row},${col}.`,
   moveFail: "Can't move there.",
   reapSuccess: (type, growth) =>
-    `Reaped lv${translate("plantGrowthLevels", growth)} ${translate("plantTypes", type)} plant.`,
+    `Reaped lv${translate("plantGrowthLevels", growth)} ${
+      translate("plantTypes", type)
+    } plant.`,
   reapSuccessOOB: "Reaped some plant somewhere somehow. " +
     "The fact that we don't know what kind of plant was reaped is a bug.",
   reapFail: "No crop on this cell.",
@@ -269,10 +277,12 @@ addLocale({
   loadSuccess: "Game loaded.",
   loadFail: "There does not seem to be a saved game in this slot.",
   saveSuccess: "Game saved.",
-  saveFail: "Could not save the game. Check if the page has localStorage permission.",
+  saveFail:
+    "Could not save the game. Check if the page has localStorage permission.",
   askToEraseGame: (slot) => `Really erase save slot ${slot}?`,
   eraseSuccess: "Game erased.",
-  eraseFail: "Could not erase the saved game. Check if the page has localStorage permission.",
+  eraseFail:
+    "Could not erase the saved game. Check if the page has localStorage permission.",
   eraseRedundant: "There is no saved game here to erase.",
   undoSuccess: "Reverted to previous game state.",
   undoFail: "This is the first game state.",
@@ -307,10 +317,10 @@ addLocale({
   },
   [true]: "是的",
   [false]: "不",
-  dayCounter: (day, weather) => `第 ${day} 天 ${translate("weatherIcons", weather)}`,
+  dayCounter: (day, weather) =>
+    `第 ${day} 天 ${translate("weatherIcons", weather)}`,
   plantDetailsHeading: "植物細節",
-  plantTypeSummary: (type) =>
-    `植物類型: ${translate("plantTypes", type)}`,
+  plantTypeSummary: (type) => `植物類型: ${translate("plantTypes", type)}`,
   plantGrowthSummary: (growth) =>
     `植物生長水平: ${translate("plantGrowthLevels", growth)}`,
   cellWaterSummary: (water) => `水分: ${water}/100`,
@@ -352,8 +362,7 @@ addLocale({
     `這個地方有 ${water} 水和 ${sun} 陽光.`,
   willGrowDescription: "這種植物今天就會生長!",
   willNotGrowDescription: "這種植物今天不會生長.",
-  intro:
-    "你就是那個黑點. 按一下相鄰的網格單元即可移動到該單元格.<br />" +
+  intro: "你就是那個黑點. 按一下相鄰的網格單元即可移動到該單元格.<br />" +
     "要播種種子, 請在庫存中按一下它, 然後按一下「播種」.<br />" +
     "要收割作物, 請移動到與其相同的網格單元格, 然後按一下「收割」.<br />" +
     "您被要求準備一批 100 種農作物.<br />" +
@@ -361,8 +370,11 @@ addLocale({
   moveSuccess: (row, col) => `移至儲存格 ${row},${col}.`,
   moveFail: "那裡不能動.",
   reapSuccess: (type, growth) =>
-    `收穫 ${translate("plantGrowthLevels", growth)} 級${translate("plantTypes", type)}植物.`,
-  reapSuccessOOB: "以某種方式在某處收穫了一些植物. 事實上，我們不知道收穫的是哪一種植物，這是一個小故障.",
+    `收穫 ${translate("plantGrowthLevels", growth)} 級${
+      translate("plantTypes", type)
+    }植物.`,
+  reapSuccessOOB:
+    "以某種方式在某處收穫了一些植物. 事實上，我們不知道收穫的是哪一種植物，這是一個小故障.",
   reapFail: "這裡沒有農作物.",
   sowSuccess: (type) => `種植了${translate("plantTypes", type)}植物.`,
   sowFailOOB: "超出範圍時無法播種. 你不應該出界. 這是一個故障.",
@@ -370,7 +382,8 @@ addLocale({
   sowFailOccupied: "這裡已經有莊稼了. (提示: 試著收穫它.)",
   sowFailNoSeeds: (type) =>
     `您目前沒有${translate("plantTypes", type)}形式的種子.`,
-  sowFailLogicError: "你應該能夠種下種子. 事實上, 您不能這樣做是一個故障, 或者失敗訊息功能已經過時.",
+  sowFailLogicError:
+    "你應該能夠種下種子. 事實上, 您不能這樣做是一個故障, 或者失敗訊息功能已經過時.",
   nextDay: "日子過去了.",
   win: "你贏了! 您已準備好所要求的 100 種農作物的發貨.",
   newGame: "正在玩新遊戲 (尚未儲存或載入).",
@@ -415,10 +428,10 @@ addLocale({
   },
   [true]: "نعم",
   [false]: "لا",
-  dayCounter: (day, weather) => `${translate("weatherIcons", weather)} ${day} اليوم `,
+  dayCounter: (day, weather) =>
+    `${translate("weatherIcons", weather)} ${day} اليوم `,
   plantDetailsHeading: "تفاصيل المحصول",
-  plantTypeSummary: (type) =>
-    `النوع: ${translate("plantTypes", type)}`,
+  plantTypeSummary: (type) => `النوع: ${translate("plantTypes", type)}`,
   plantGrowthSummary: (growth) =>
     `مستوى النمو: ${translate("plantGrowthLevels", growth)}`,
   cellWaterSummary: (water) => `الماء: ${water}/100`,
@@ -447,9 +460,12 @@ addLocale({
   },
   plantTypeDescriptions: {
     [null]: "لا يوجد نبات هنا.",
-    [PlantType.Circle]: "لا يمكن للنباتات الدائرية أن تنمو إذا كانت الأراضي المجاورة مشغولة قطريًا.",
-    [PlantType.Triangle]: "لا يمكن للنباتات المثلثية أن تنمو إذا كانت الأراضي المجاورة أفقياً أو رأسياً مشغولة.",
-    [PlantType.Square]: "لا يمكن للنباتات المربعة أن تنمو إذا كانت أي قطعة أرض محيطة بها مشغولة.",
+    [PlantType.Circle]:
+      "لا يمكن للنباتات الدائرية أن تنمو إذا كانت الأراضي المجاورة مشغولة قطريًا.",
+    [PlantType.Triangle]:
+      "لا يمكن للنباتات المثلثية أن تنمو إذا كانت الأراضي المجاورة أفقياً أو رأسياً مشغولة.",
+    [PlantType.Square]:
+      "لا يمكن للنباتات المربعة أن تنمو إذا كانت أي قطعة أرض محيطة بها مشغولة.",
   },
   plantGrowthDescriptions: {
     1: "تتطلب نباتات المستوى 1 ما لا يقل عن 50 ماء و50 شمسًا.",
@@ -462,33 +478,41 @@ addLocale({
   willNotGrowDescription: "هذا النبات لن ينمو اليوم",
   intro:
     "أنت النقطة السوداء. انقر على خلية الشبكة المجاورة للانتقال إليها.<br />" +
-    "لزرع بذرة، انقر عليها في مخزونك، ثم انقر فوق \"زرع\".<br />" +
-    "لحصاد المحصول، انتقل إلى نفس خلية الشبكة التي يوجد بها المحصول، وانقر فوق \"حصاد\".<br />" +
+    'لزرع بذرة، انقر عليها في مخزونك، ثم انقر فوق "زرع".<br />' +
+    'لحصاد المحصول، انتقل إلى نفس خلية الشبكة التي يوجد بها المحصول، وانقر فوق "حصاد".<br />' +
     "لقد طلب منك تحضير شحنة مكونة من 100 محصول.<br />" +
     "هدفك هو جمع أكبر عدد ممكن من المحاصيل في مخزونك لتكون جاهزة للشحن.",
   moveSuccess: (row, col) => `تم النقل إلى الخلية ${row},${col}.`,
   moveFail: "لا يمكن التحرك هناك.",
   reapSuccess: (type, growth) =>
-    `حصد نبات ${translate("plantTypes", type)} المستوى ${translate("plantGrowthLevels", growth)}.`,
-  reapSuccessOOB: "لقد حصدت بعض النباتات في مكان ما بطريقة ما. إن حقيقة أننا لا نعرف نوع النبات الذي تم حصاده هي خلل.",
+    `حصد نبات ${translate("plantTypes", type)} المستوى ${
+      translate("plantGrowthLevels", growth)
+    }.`,
+  reapSuccessOOB:
+    "لقد حصدت بعض النباتات في مكان ما بطريقة ما. إن حقيقة أننا لا نعرف نوع النبات الذي تم حصاده هي خلل.",
   reapFail: "لا يوجد محصول هنا.",
   sowSuccess: (type) => `زرعت نباتًا من نوع ${translate("plantTypes", type)}.`,
-  sowFailOOB: "لا يمكنك زرع البذور أثناء وجودك خارج الحدود. يجب أن لا تكون خارج الحدود. هذا خلل.",
-  sowFailNoSelection: "لم تقم باختيار بذرة لزرعها. (تلميح: انقر على نوع البذرة في مخزونك.)",
+  sowFailOOB:
+    "لا يمكنك زرع البذور أثناء وجودك خارج الحدود. يجب أن لا تكون خارج الحدود. هذا خلل.",
+  sowFailNoSelection:
+    "لم تقم باختيار بذرة لزرعها. (تلميح: انقر على نوع البذرة في مخزونك.)",
   sowFailOccupied: "يوجد بالفعل نبات هنا. (تلميح: حاول حصاده بدلاً من ذلك.)",
   sowFailNoSeeds: (type) =>
     `ليس لديك أي بذور ${translate("plantTypes", type)} في هذا الوقت.`,
-  sowFailLogicError: "كان من المفترض أن تتمكن من زرع البذرة. والحقيقة أنك لم تتمكن من ذلك هي خلل، أو أن وظيفة رسالة الفشل أصبحت قديمة.",
+  sowFailLogicError:
+    "كان من المفترض أن تتمكن من زرع البذرة. والحقيقة أنك لم تتمكن من ذلك هي خلل، أو أن وظيفة رسالة الفشل أصبحت قديمة.",
   nextDay: "لقد وصل اليوم التالي.",
   win: "لقد فزت! لقد قمت بإعداد الشحنة المطلوبة المكونة من 100 محصول.",
   newGame: "اللعب في لعبة جديدة (لم يتم حفظها أو تحميلها بعد).",
   loadSuccess: "تم تحميل اللعبة.",
   loadFail: "يبدو أنه لا توجد لعبة محفوظة في هذه الفتحة.",
   saveSuccess: "تم حفظ اللعبة.",
-  saveFail: "لم نتمكن من حفظ اللعبة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
+  saveFail:
+    "لم نتمكن من حفظ اللعبة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
   askToEraseGame: (slot) => `هل تريد حقًا مسح فتحة الحفظ ${slot}؟`,
   eraseSuccess: "تم مسح البيانات.",
-  eraseFail: "تعذر مسح اللعبة المحفوظة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
+  eraseFail:
+    "تعذر مسح اللعبة المحفوظة. تحقق مما إذا كانت الصفحة تتمتع بأذونات التخزين المحلي.",
   eraseRedundant: "لا يوجد هنا لعبة محفوظة لمسحها.",
   undoSuccess: "تم التراجع عن الإجراء الأخير.",
   undoFail: "لا يمكنك التراجع عن حالة اللعبة الأولي.",
@@ -499,9 +523,9 @@ addLocale({
 function translate(key, ...args) {
   const locale = locales[parseInt(localeSelection.value)];
   let translation = locale[key] || key;
-  if (typeof(translation) === "function") {
+  if (typeof translation === "function") {
     translation = translation(...args);
-  } else if (typeof(translation) === "object") {
+  } else if (typeof translation === "object") {
     for (const subkey of args) {
       translation = translation[subkey];
     }
@@ -1237,8 +1261,11 @@ function updateInventoryUI() {
   inventoryContainer.innerHTML = "";
   Object.keys(state.inventory).forEach((plantType) => {
     const li = document.createElement("li");
-    li.textContent =
-      translate("inventoryItemButton", plantType, state.inventory[plantType]);
+    li.textContent = translate(
+      "inventoryItemButton",
+      plantType,
+      state.inventory[plantType],
+    );
     li.onclick = () => {
       state.selectedInventoryPlant = plantType;
       updateInventoryUI();
@@ -1252,13 +1279,19 @@ function updateInventoryUI() {
 
 function updatePlantHelp(cell) {
   const weatherMessage = translate("weatherDescriptions", state.weather);
-  let plantMessage = translate("plantTypeDescriptions", cell.plant?.type || null);
+  let plantMessage = translate(
+    "plantTypeDescriptions",
+    cell.plant?.type || null,
+  );
   if (cell.plant) {
-    plantMessage += " " + translate("plantGrowthDescriptions", cell.plant.growth);
+    plantMessage += " " +
+      translate("plantGrowthDescriptions", cell.plant.growth);
   }
-  plantMessage += " " + translate("cellResourcesDescription", cell.water, cell.sun);
+  plantMessage += " " +
+    translate("cellResourcesDescription", cell.water, cell.sun);
   if (cell.plant) {
-    plantMessage += " " + translate("plantGrowthDescriptions", cell.plant.growth);
+    plantMessage += " " +
+      translate("plantGrowthDescriptions", cell.plant.growth);
     if (plantCanGrow(cell)) {
       plantMessage += " " + translate("willGrowDescription");
     } else {
@@ -1269,8 +1302,14 @@ function updatePlantHelp(cell) {
 }
 
 function updatePlantSummary(cell) {
-  typeDisplay.textContent = translate("plantTypeSummary", cell.plant?.type || null);
-  growthLevelDisplay.textContent = translate("plantGrowthSummary", cell.plant?.growth || null);
+  typeDisplay.textContent = translate(
+    "plantTypeSummary",
+    cell.plant?.type || null,
+  );
+  growthLevelDisplay.textContent = translate(
+    "plantGrowthSummary",
+    cell.plant?.growth || null,
+  );
   waterDisplay.textContent = translate("cellWaterSummary", cell.water);
   sunDisplay.textContent = translate("cellSunSummary", cell.sun);
   const canGrow = plantCanGrow(cell);
@@ -1328,8 +1367,11 @@ function handleKey(key) {
 }
 
 function updateDayCounter() {
-  dayCounterDisplay.innerHTML =
-    translate("dayCounter", state.day, state.weather);
+  dayCounterDisplay.innerHTML = translate(
+    "dayCounter",
+    state.day,
+    state.weather,
+  );
 }
 
 function detectAndReportWin() {
@@ -1455,7 +1497,9 @@ function showReapFail() {
 function showReapSuccess() {
   const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant) {
-    successMessage(translate("reapSuccess", cell.plant.type, cell.plant.growth));
+    successMessage(
+      translate("reapSuccess", cell.plant.type, cell.plant.growth),
+    );
   } else {
     failMessage(translate("reapSuccessOOB"));
   }
