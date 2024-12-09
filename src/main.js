@@ -1,4 +1,9 @@
 import "./style.css";
+
+/*
+ * Util
+ */
+
 function flatten(tree) {
   if (tree instanceof Array) {
     const result = [];
@@ -12,9 +17,11 @@ function flatten(tree) {
     return [tree];
   }
 }
+
 function randomItem(from) {
   return from[Math.floor(Math.random() * from.length)];
 }
+
 function u8ArrayGetNumber(array, options) {
   let result = 0;
   if (options.width) {
@@ -32,6 +39,7 @@ function u8ArrayGetNumber(array, options) {
   }
   return result;
 }
+
 function u8ArraySetNumber(array, options) {
   let value = options.value;
   if (options.width) {
@@ -49,9 +57,11 @@ function u8ArraySetNumber(array, options) {
     array[options.offset] = value;
   }
 }
+
 function u8ArrayGetEnum(array, values, options) {
   return values[u8ArrayGetNumber(array, options)];
 }
+
 function u8ArraySetEnum(array, values, options) {
   u8ArraySetNumber(
     array,
@@ -60,6 +70,7 @@ function u8ArraySetEnum(array, values, options) {
     }),
   );
 }
+
 function u8ArrayToHex(array) {
   let result = "";
   for (const byte of array) {
@@ -70,11 +81,13 @@ function u8ArrayToHex(array) {
   }
   return result;
 }
+
 function u8ArraySetFromHex(array, hex) {
   for (let i = 0; i < hex.length / 2; i++) {
     array[i] = parseInt(hex.slice(2 * i, 2 * (i + 1)), 0x10);
   }
 }
+
 function u8ArrayDuplicate(array) {
   const copy = new Uint8Array(array.length);
   for (let i = 0; i < array.length; i++) {
@@ -82,6 +95,11 @@ function u8ArrayDuplicate(array) {
   }
   return copy;
 }
+
+/*
+ * DOM elements
+ */
+
 const canvas = document.getElementById("game-grid");
 const ctx = canvas.getContext("2d");
 const dayCounterDisplay = document.getElementById("day-counter");
@@ -104,51 +122,33 @@ const undoButton = document.getElementById("undo-button");
 const redoButton = document.getElementById("redo-button");
 const saveLoadStatus = document.getElementById("save-load-status");
 const gameStatus = document.getElementById("game-status");
-var PlantType;
+
+/*
+ * Constants and constant-like globals
+ */
+
+let PlantType;
 (function (PlantType) {
   PlantType["Circle"] = "Circle";
   PlantType["Triangle"] = "Triangle";
   PlantType["Square"] = "Square";
 })(PlantType || (PlantType = {}));
+
 const ROWS = 10;
 const COLS = 12;
 const MEMORY_SIZE = 0x170;
+
 let CELL_SIZE = 0;
 let CELL_PADDING = 0;
 let GRID_PADDING = 0;
-const plantGridOffsetsThatMustBeFree = (() => {
-  const allGridOffsets = flatten(
-    [-1, 0, 1].map((row) => [-1, 0, 1].map((col) => ({ row, col }))),
-  );
-  const predicates = {
-    [PlantType.Circle]: (p) => p.row != 0 && p.col != 0,
-    [PlantType.Triangle]: (p) => (p.row == 0) != (p.col == 0),
-    [PlantType.Square]: (p) => !(p.row == 0 && p.col == 0),
-  };
-  const result = {};
-  for (const plantType of Object.keys(predicates)) {
-    result[plantType] = allGridOffsets.filter(predicates[plantType]);
-  }
-  return result;
-})();
-const plantGrowthResourceRequirements = {
-  [1]: { sun: 50, water: 50 },
-  [2]: { sun: 75, water: 75 },
-};
-const plantTypesByNumber = [
-  null,
-  PlantType.Circle,
-  PlantType.Triangle,
-  PlantType.Square,
-];
+
 const undoStack = [new Uint8Array(MEMORY_SIZE)];
 const redoStack = [];
-var Weather;
-(function (Weather) {
-  Weather["Sunny"] = "Sunny";
-  Weather["Rainy"] = "Rainy";
-  Weather["Normal"] = "Normal";
-})(Weather || (Weather = {}));
+
+/*
+ * State management
+ */
+
 const state = {
   weather: Weather.Normal,
   get saveSlot() {
@@ -338,39 +338,16 @@ const state = {
     return cell;
   },
 };
-function applyWeatherEffects() {
-  switch (state.weather) {
-    case Weather.Sunny:
-      for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-          const cell = state.grid(row, col);
-          cell.sun = Math.min(cell.sun + 20, 100);
-        }
-      }
-      break;
-    case Weather.Rainy:
-      for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-          const cell = state.grid(row, col);
-          cell.water = Math.min(cell.water + 20, 100);
-        }
-      }
-      break;
-    case Weather.Normal:
-      break;
-  }
-}
-function determineWeather() {
-  const weatherOptions = [Weather.Sunny, Weather.Rainy, Weather.Normal];
-  return randomItem(weatherOptions);
-}
+
 function lastMemory() {
   return undoStack[undoStack.length - 1];
 }
+
 function beginUndoStep() {
   redoStack.length = 0;
   undoStack.push(u8ArrayDuplicate(lastMemory()));
 }
+
 function undo() {
   if (undoStack.length > 1) {
     redoStack.push(undoStack[undoStack.length - 1]);
@@ -383,6 +360,7 @@ function undo() {
     return false;
   }
 }
+
 function redo() {
   if (redoStack.length > 0) {
     undoStack.push(redoStack[redoStack.length - 1]);
@@ -395,12 +373,14 @@ function redo() {
     return false;
   }
 }
+
 function serializeStateStacks() {
   return JSON.stringify({
     redoStack: redoStack.map(u8ArrayToHex),
     undoStack: undoStack.map(u8ArrayToHex),
   });
 }
+
 function deserializeStateStacks(serialized) {
   const data = JSON.parse(serialized);
   for (
@@ -418,6 +398,7 @@ function deserializeStateStacks(serialized) {
   }
   updateDisplay();
 }
+
 function saveGame(slot) {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   const saveData = serializeStateStacks();
@@ -430,6 +411,7 @@ function saveGame(slot) {
     return false;
   }
 }
+
 function loadGame(slot) {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   const saveData = localStorage.getItem(saveKey);
@@ -445,6 +427,7 @@ function loadGame(slot) {
     return false;
   }
 }
+
 function eraseGame(slot) {
   const saveKey = `saveSlot${slot || state.saveSlot}`;
   const autoSaveKey = `saveSlot-1`; // Autosave key
@@ -469,10 +452,12 @@ function eraseGame(slot) {
 function isAutosaveSlot(slot) {
   return !!slot && slot < 0;
 }
+
 function autosave() {
   localStorage.setItem("currentWeather", state.weather);
   return saveGame(-1);
 }
+
 function loadAutosave() {
   const success = loadGame(-1);
   if (success) {
@@ -483,11 +468,240 @@ function loadAutosave() {
   }
   return success;
 }
+
 function commitState() {
   autosave();
   localStorage.setItem("currentWeather", state.weather);
   detectAndReportWin();
 }
+
+/*
+ * Application logic
+ */
+
+const plantGridOffsetsThatMustBeFree = (() => {
+  const allGridOffsets = flatten(
+    [-1, 0, 1].map((row) => [-1, 0, 1].map((col) => ({ row, col }))),
+  );
+  const predicates = {
+    [PlantType.Circle]: (p) => p.row != 0 && p.col != 0,
+    [PlantType.Triangle]: (p) => (p.row == 0) != (p.col == 0),
+    [PlantType.Square]: (p) => !(p.row == 0 && p.col == 0),
+  };
+  const result = {};
+  for (const plantType of Object.keys(predicates)) {
+    result[plantType] = allGridOffsets.filter(predicates[plantType]);
+  }
+  return result;
+})();
+
+const plantGrowthResourceRequirements = {
+  [1]: { sun: 50, water: 50 },
+  [2]: { sun: 75, water: 75 },
+};
+
+const plantTypesByNumber = [
+  null,
+  PlantType.Circle,
+  PlantType.Triangle,
+  PlantType.Square,
+];
+
+let Weather;
+(function (Weather) {
+  Weather["Sunny"] = "Sunny";
+  Weather["Rainy"] = "Rainy";
+  Weather["Normal"] = "Normal";
+})(Weather || (Weather = {}));
+
+function applyWeatherEffects() {
+  switch (state.weather) {
+    case Weather.Sunny:
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cell = state.grid(row, col);
+          cell.sun = Math.min(cell.sun + 20, 100);
+        }
+      }
+      break;
+    case Weather.Rainy:
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const cell = state.grid(row, col);
+          cell.water = Math.min(cell.water + 20, 100);
+        }
+      }
+      break;
+    case Weather.Normal:
+      break;
+  }
+}
+
+function determineWeather() {
+  const weatherOptions = [Weather.Sunny, Weather.Rainy, Weather.Normal];
+  return randomItem(weatherOptions);
+}
+
+function gridPointInBounds(row, col) {
+  return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+}
+
+function gridPointsAdjacent(a, b) {
+  return ((Math.abs(a.row - b.row) == 1 && a.col == b.col) ||
+    (Math.abs(a.col - b.col) == 1 && a.row == b.row));
+}
+
+function getCell(row, col) {
+  if (gridPointInBounds(row, col)) {
+    return state.grid(row, col);
+  } else {
+    return null;
+  }
+}
+
+function randomPlantType() {
+  return randomItem(Object.keys(PlantType));
+}
+
+function selectInventoryPlant(plantType) {
+  state.selectedInventoryPlant = plantType;
+  updateDisplay();
+}
+
+function sowPlant() {
+  const cell = getCell(state.player.row, state.player.col);
+  if (
+    !cell ||
+    !state.selectedInventoryPlant ||
+    cell.plant !== null ||
+    state.inventory[state.selectedInventoryPlant] <= 0
+  ) {
+    showSowFail();
+  } else {
+    showSowSuccess();
+    beginUndoStep();
+    cell.plant = {
+      type: state.selectedInventoryPlant,
+      growth: 1,
+    };
+    state.inventory[state.selectedInventoryPlant]--;
+    updateDisplay();
+    commitState();
+  }
+}
+
+function reapPlant() {
+  const cell = getCell(state.player.row, state.player.col);
+  if (cell && cell.plant !== null) {
+    showReapSuccess();
+    beginUndoStep();
+    state.inventory[cell.plant.type] += cell.plant.growth;
+    cell.plant = null;
+    updateDisplay();
+    commitState();
+  } else {
+    showReapFail();
+  }
+}
+
+function plantHasRoomToGrow(cell) {
+  return !!cell.plant &&
+    plantGridOffsetsThatMustBeFree[cell.plant.type].every((p) => {
+      let _a;
+      return !((_a = getCell(cell.row + p.row, cell.col + p.col)) === null ||
+          _a === void 0
+        ? void 0
+        : _a.plant);
+    });
+}
+
+function plantHasResourcesToGrow(cell) {
+  return !!cell.plant &&
+    cell.plant.growth in plantGrowthResourceRequirements &&
+    cell.sun >= plantGrowthResourceRequirements[cell.plant.growth].sun &&
+    cell.water >= plantGrowthResourceRequirements[cell.plant.growth].water;
+}
+
+function plantCanGrow(cell) {
+  return plantHasRoomToGrow(cell) && plantHasResourcesToGrow(cell);
+}
+
+function tryGrowPlant(cell) {
+  if (plantCanGrow(cell)) {
+    switch (cell.plant.growth) {
+      case 1:
+        cell.water -= 50;
+        break;
+      case 2:
+        cell.water -= 75;
+        break;
+    }
+    cell.plant.growth++;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function growPlants() {
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      tryGrowPlant(state.grid(row, col));
+    }
+  }
+}
+
+function movePlayer(cols, rows) {
+  const newCol = state.player.col + cols;
+  const newRow = state.player.row + rows;
+  const cell = getCell(newRow, newCol);
+  if (cell) {
+    beginUndoStep();
+    state.player.col = newCol;
+    state.player.row = newRow;
+    updateDisplay();
+    showMoveSuccess();
+    commitState();
+  } else {
+    showMoveFail();
+  }
+}
+
+function distributeNaturalResources() {
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const cell = state.grid(row, col);
+      cell.water = Math.min(
+        cell.water + Math.floor(Math.random() * 21) + 5,
+        100,
+      );
+      cell.sun = Math.min(Math.floor(Math.random() * 100), 100);
+    }
+  }
+}
+
+function nextDay() {
+  beginUndoStep();
+  state.weather = determineWeather();
+  applyWeatherEffects();
+  growPlants();
+  state.day++;
+  distributeNaturalResources();
+  updateDisplay();
+  commitState();
+  reportNextDay();
+  updateDayCounter();
+}
+
+function gameWon() {
+  return state.inventory.Circle + state.inventory.Square +
+      state.inventory.Triangle >= 100;
+}
+
+/*
+ * UI
+ */
+
 function recalculateDimensions() {
   const MIN_PADDING = 10;
   const MAX_PADDING = 30;
@@ -513,12 +727,14 @@ function draw() {
   drawGrid();
   drawPlayer();
 }
+
 function gridCellULCorner(row, col) {
   return {
     x: GRID_PADDING + col * (CELL_SIZE + CELL_PADDING),
     y: GRID_PADDING + row * (CELL_SIZE + CELL_PADDING),
   };
 }
+
 function canvasPointToGridPoint(x, y) {
   const result = {
     col: Math.floor((x - GRID_PADDING) / (CELL_SIZE + CELL_PADDING)),
@@ -538,6 +754,7 @@ function canvasPointToGridPoint(x, y) {
     }
   }
 }
+
 function drawGrid() {
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
@@ -590,6 +807,7 @@ function drawCircle(x, y) {
   ctx.arc(x + CELL_SIZE / 2, y + CELL_SIZE / 2, CELL_SIZE / 4, 0, Math.PI * 2);
   ctx.fill();
 }
+
 function drawTriangle(x, y) {
   ctx.fillStyle = "#ffa500";
   ctx.beginPath();
@@ -599,6 +817,7 @@ function drawTriangle(x, y) {
   ctx.closePath();
   ctx.fill();
 }
+
 function drawSquare(x, y) {
   ctx.fillStyle = "#4682b4";
   ctx.fillRect(
@@ -608,6 +827,7 @@ function drawSquare(x, y) {
     CELL_SIZE / 2,
   );
 }
+
 function drawPlayer() {
   let { x, y } = gridCellULCorner(state.player.row, state.player.col);
   x += CELL_SIZE / 2;
@@ -617,6 +837,7 @@ function drawPlayer() {
   ctx.arc(x, y, CELL_SIZE / 4, 0, Math.PI * 2);
   ctx.fill();
 }
+
 function updateInventoryUI() {
   inventoryContainer.innerHTML = "";
   Object.keys(state.inventory).forEach((plantType) => {
@@ -632,6 +853,7 @@ function updateInventoryUI() {
     inventoryContainer.appendChild(li);
   });
 }
+
 function updatePlantHelp(cell) {
   const weatherMessages = {
     [Weather.Sunny]:
@@ -679,8 +901,9 @@ function updatePlantHelp(cell) {
   }
   plantHelpToolTip.textContent = `${weatherMessage}\n\n${plantMessage}`;
 }
+
 function updatePlantSummary(cell) {
-  var _a, _b;
+  let _a, _b;
   typeDisplay.textContent =
     ((_a = cell.plant) === null || _a === void 0 ? void 0 : _a.type) || "None";
   growthLevelDisplay.textContent = `${
@@ -696,6 +919,7 @@ function updatePlantSummary(cell) {
     canGrowDisplay.className = "fail";
   }
 }
+
 function handleGridClicked(x, y) {
   const gridPoint = canvasPointToGridPoint(x, y);
   if (gridPoint && gridPointsAdjacent(state.player, gridPoint)) {
@@ -705,6 +929,7 @@ function handleGridClicked(x, y) {
     );
   }
 }
+
 function handleKey(key) {
   if (key === "ArrowUp") {
     movePlayer(0, -1);
@@ -743,6 +968,7 @@ function handleKey(key) {
     redo();
   }
 }
+
 function updateDayCounter() {
   const weatherEmoji = {
     [Weather.Sunny]: "🌞",
@@ -754,15 +980,18 @@ function updateDayCounter() {
     weatherEmoji[state.weather]
   }`;
 }
+
 function detectAndReportWin() {
   if (gameWon()) {
     undo();
-    if (!gameWon()) {
+    const hadAlreadyWon = gameWon();
+    redo();
+    if (!hadAlreadyWon) {
       alert("You win! You have prepared the requested shipment of 100 crops.");
     }
-    redo();
   }
 }
+
 function updateDisplay() {
   updateInventoryUI();
   updateDayCounter();
@@ -773,72 +1002,91 @@ function updateDisplay() {
   }
   draw();
 }
+
 function saveLoadNeutralMessage(what) {
   saveLoadStatus.className = "";
   saveLoadStatus.innerHTML = what;
 }
+
 function saveLoadFailMessage(what) {
   saveLoadStatus.className = "fail";
   saveLoadStatus.innerHTML = what;
 }
+
 function saveLoadSuccessMessage(what) {
   saveLoadStatus.className = "success";
   saveLoadStatus.innerHTML = what;
 }
+
 function neutralMessage(what) {
   gameStatus.className = "";
   gameStatus.innerHTML = what;
 }
+
 function successMessage(what) {
   gameStatus.className = "success";
   gameStatus.innerHTML = what;
 }
+
 function failMessage(what) {
   gameStatus.className = "fail";
   gameStatus.innerHTML = what;
 }
+
 function reportLoadFail() {
   saveLoadFailMessage("There does not seem to be a saved game in this slot.");
 }
+
 function reportLoadSuccess() {
   saveLoadSuccessMessage("Game loaded.");
 }
+
 function reportSaveFail() {
   saveLoadFailMessage(
     "Could not save the game. Check if the page has localStorage permission.",
   );
 }
+
 function reportSaveSuccess() {
   saveLoadSuccessMessage("Game saved.");
 }
+
 function askToEraseGame() {
   if (confirm(`Really erase save slot ${state.saveSlot}?`)) {
     eraseGame();
   }
 }
+
 function reportEraseFail() {
   saveLoadFailMessage(
     "Could not erase the saved game. Check if the page has localStorage permission.",
   );
 }
+
 function reportEraseRedundant() {
   saveLoadFailMessage("There is no saved game here to erase.");
 }
+
 function reportEraseSuccess() {
   saveLoadSuccessMessage("Game erased.");
 }
+
 function reportUndoSuccess() {
   successMessage("Reverted to previous game state.");
 }
+
 function reportUndoFail() {
   failMessage("This is the first game state.");
 }
+
 function reportRedoSuccess() {
   successMessage("Restored future game state.");
 }
+
 function reportRedoFail() {
   failMessage("This is the last game state.");
 }
+
 function showTutorialMessage() {
   neutralMessage(
     "You are the black dot. Click on an adjacent grid cell to move to it.<br />" +
@@ -848,15 +1096,19 @@ function showTutorialMessage() {
       "Your goal is to gather that many crops into your inventory to get them ready to ship.",
   );
 }
+
 function showMoveFail() {
   failMessage("Can't move there.");
 }
+
 function showMoveSuccess() {
   successMessage(`Moved to cell ${state.player.row},${state.player.col}.`);
 }
+
 function showReapFail() {
   failMessage("No crop on this cell.");
 }
+
 function showReapSuccess() {
   const cell = getCell(state.player.row, state.player.col);
   if (cell && cell.plant) {
@@ -868,6 +1120,7 @@ function showReapSuccess() {
     );
   }
 }
+
 function showSowFail() {
   const cell = getCell(state.player.row, state.player.col);
   if (!cell) {
@@ -897,155 +1150,23 @@ function showSowFail() {
     );
   }
 }
+
 function showSowSuccess() {
   successMessage(`Planted a ${state.selectedInventoryPlant} plant.`);
 }
+
 function reportNewGame() {
   saveLoadNeutralMessage("Playing on a new game (not yet saved or loaded).");
 }
+
 function reportNextDay() {
   successMessage("Advanced to the next day.");
 }
-function gridPointInBounds(row, col) {
-  return row >= 0 && row < ROWS && col >= 0 && col < COLS;
-}
-function gridPointsAdjacent(a, b) {
-  return ((Math.abs(a.row - b.row) == 1 && a.col == b.col) ||
-    (Math.abs(a.col - b.col) == 1 && a.row == b.row));
-}
-function getCell(row, col) {
-  if (gridPointInBounds(row, col)) {
-    return state.grid(row, col);
-  } else {
-    return null;
-  }
-}
-function randomPlantType() {
-  return randomItem(Object.keys(PlantType));
-}
-function selectInventoryPlant(plantType) {
-  state.selectedInventoryPlant = plantType;
-  updateDisplay();
-}
-function sowPlant() {
-  const cell = getCell(state.player.row, state.player.col);
-  if (
-    !cell ||
-    !state.selectedInventoryPlant ||
-    cell.plant !== null ||
-    state.inventory[state.selectedInventoryPlant] <= 0
-  ) {
-    showSowFail();
-  } else {
-    showSowSuccess();
-    beginUndoStep();
-    cell.plant = {
-      type: state.selectedInventoryPlant,
-      growth: 1,
-    };
-    state.inventory[state.selectedInventoryPlant]--;
-    updateDisplay();
-    commitState();
-  }
-}
-function reapPlant() {
-  const cell = getCell(state.player.row, state.player.col);
-  if (cell && cell.plant !== null) {
-    showReapSuccess();
-    beginUndoStep();
-    state.inventory[cell.plant.type] += cell.plant.growth;
-    cell.plant = null;
-    updateDisplay();
-    commitState();
-  } else {
-    showReapFail();
-  }
-}
-function plantHasRoomToGrow(cell) {
-  return !!cell.plant &&
-    plantGridOffsetsThatMustBeFree[cell.plant.type].every((p) => {
-      var _a;
-      return !((_a = getCell(cell.row + p.row, cell.col + p.col)) === null ||
-          _a === void 0
-        ? void 0
-        : _a.plant);
-    });
-}
-function plantHasResourcesToGrow(cell) {
-  return !!cell.plant &&
-    cell.plant.growth in plantGrowthResourceRequirements &&
-    cell.sun >= plantGrowthResourceRequirements[cell.plant.growth].sun &&
-    cell.water >= plantGrowthResourceRequirements[cell.plant.growth].water;
-}
-function plantCanGrow(cell) {
-  return plantHasRoomToGrow(cell) && plantHasResourcesToGrow(cell);
-}
-function tryGrowPlant(cell) {
-  if (plantCanGrow(cell)) {
-    switch (cell.plant.growth) {
-      case 1:
-        cell.water -= 50;
-        break;
-      case 2:
-        cell.water -= 75;
-        break;
-    }
-    cell.plant.growth++;
-    return true;
-  } else {
-    return false;
-  }
-}
-function growPlants() {
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
-      tryGrowPlant(state.grid(row, col));
-    }
-  }
-}
-function movePlayer(cols, rows) {
-  const newCol = state.player.col + cols;
-  const newRow = state.player.row + rows;
-  const cell = getCell(newRow, newCol);
-  if (cell) {
-    beginUndoStep();
-    state.player.col = newCol;
-    state.player.row = newRow;
-    updateDisplay();
-    showMoveSuccess();
-    commitState();
-  } else {
-    showMoveFail();
-  }
-}
-function distributeNaturalResources() {
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
-      const cell = state.grid(row, col);
-      cell.water = Math.min(
-        cell.water + Math.floor(Math.random() * 21) + 5,
-        100,
-      );
-      cell.sun = Math.min(Math.floor(Math.random() * 100), 100);
-    }
-  }
-}
-function nextDay() {
-  beginUndoStep();
-  state.weather = determineWeather();
-  applyWeatherEffects();
-  growPlants();
-  state.day++;
-  distributeNaturalResources();
-  updateDisplay();
-  commitState();
-  reportNextDay();
-  updateDayCounter();
-}
-function gameWon() {
-  return state.inventory.Circle + state.inventory.Square +
-      state.inventory.Triangle >= 100;
-}
+
+/*
+ * Initialization
+ */
+
 function initializeGrid() {
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
@@ -1062,6 +1183,7 @@ function initializeGrid() {
   }
   distributeNaturalResources();
 }
+
 function initializeEvents() {
   globalThis.addEventListener("keydown", (e) => handleKey(e.key));
   addEventListener("resize", recalculateDimensions);
@@ -1079,22 +1201,27 @@ function initializeEvents() {
     (e) => handleGridClicked(e.offsetX, e.offsetY),
   );
 }
+
 function grantInitialSeeds() {
   for (const plantType of Object.keys(PlantType)) {
     state.inventory[plantType] = 1;
   }
 }
+
 function initializeDayCount() {
   state.day = 1;
 }
+
 function initializePlayerPosition() {
   state.player.row = 0;
   state.player.col = 0;
 }
+
 function resetStateStacks() {
   undoStack.length = 1;
   redoStack.length = 0;
 }
+
 function initializeGame() {
   initializeGrid();
   recalculateDimensions();
@@ -1111,6 +1238,7 @@ function initializeGame() {
   reportNewGame();
   showTutorialMessage();
 }
+
 function initializeApp() {
   initializeEvents();
 
