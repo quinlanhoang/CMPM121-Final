@@ -552,5 +552,3 @@ function initializeGame() {
 }
 
 initializeGame();
-
-//deployment fix
