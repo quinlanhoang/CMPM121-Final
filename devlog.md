@@ -60,6 +60,11 @@ I have personally confirmed it is possible to install the PWA from that page.
 No major changes were required to implement F3 that have not already been
 discussed above.
 
+
+### F3 Video link  
+- [F3 Video] https://drive.google.com/drive/folders/1oJ94mi7GdJf0BJKiXDlxUmC-dlQ6zhnt?usp=sharing
+
+
 ## Project phase F2
 
 ### How we satisfied the software requirements
