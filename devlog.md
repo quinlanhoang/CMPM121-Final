@@ -180,6 +180,11 @@ Changes of plans:
   not requiring much effort. The changes ensure that if you can read, then you
   can play the game.
 
+
+  ### F1 Video link  
+- [F1 Video] https://drive.google.com/drive/folders/1oJ94mi7GdJf0BJKiXDlxUmC-dlQ6zhnt?usp=sharing
+
+
 ## Project phase F0
 
 ### How we satisfied the software requirements
@@ -234,3 +239,7 @@ Here is how our thinking changed over time:
   requirements, and I picked up where he left off and finished it up. I was able
   to constrain myself to the established implementation and coding style much
   more effectively with some work already in front of me to build on.
+
+
+### F0 Video link  
+- [F0 Video] https://drive.google.com/drive/folders/1oJ94mi7GdJf0BJKiXDlxUmC-dlQ6zhnt?usp=sharing
