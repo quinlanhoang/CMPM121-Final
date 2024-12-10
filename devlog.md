@@ -122,6 +122,9 @@ Here is how our thinking changed over time:
   the end, I managed to complete this task and feel very proud of myself for not
   wasting too much time on it.
 
+### F2 Video link  
+- [F2 Video] https://drive.google.com/drive/folders/1oJ94mi7GdJf0BJKiXDlxUmC-dlQ6zhnt?usp=sharing
+
 ## Project phase F1
 
 ### How we satisfied the software requirements
